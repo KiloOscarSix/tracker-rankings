@@ -1,0 +1,9 @@
+Work on the next milestone of this project. Do one milestone only, then stop.
+
+1. Read CLAUDE.md, docs/PLAN.md and .claude/REFERENCES.md. The next milestone is the first unticked "- [ ]" item under "## Milestones" in docs/PLAN.md. If I name a milestone after this prompt (e.g. "M4"), do that one instead.
+2. Plan the milestone in plan mode. Cover the files to add or change, the exact types, schemas and signatures, and how its "Done when" will be verified. Check Topcoat APIs against docs/topcoat/ and patterns against the reference repos listed in .claude/REFERENCES.md; never work from memory. Ask me only about decisions that block the design.
+3. After I approve, implement in small steps. Use narrow checks while working (cargo check -p / cargo test -p). Stay inside the milestone: put anything out of scope in a "Follow-ups" list in your final reply, not in code.
+4. Finish with the full validation suite from CLAUDE.md and prove the milestone's "Done when" (test output, or the page checked in the browser). Then:
+   - tick the milestone in docs/PLAN.md and add a one-line note of any deviation from the plan under it;
+   - update .claude/REFERENCES.md if you borrowed a new pattern;
+   - propose small, focused commits (imperative summaries) and wait for my approval before committing.

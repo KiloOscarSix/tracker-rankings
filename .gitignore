@@ -1,0 +1,40 @@
+# Rust & Cargo
+target/
+**/*.rs.bk
+
+# bacon
+.bacon-locations
+
+# Coverage & profiling
+*.profraw
+*.profdata
+lcov.info
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Claude Code local state
+.claude/settings.local.json
+
+# Local scratch
+scratch/
+
+# Logs
+*.log
+logs/
+
+# Frontend
+node_modules/
+dist/
+
+# IDEs & system files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.zed/
+*.sw?
+.DS_Store

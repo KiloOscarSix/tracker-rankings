@@ -1,0 +1,36 @@
+# Tracker Ladder
+
+Community rankings of private trackers, and whether the next rung of the invite ladder is worth the climb.
+
+- **Ratings**: members rate the trackers they're on across five axes (overall, content, community, retention/ratio ease, longevity). Scores use weighted Bayesian averages. Anonymous votes count at reduced weight; Discord and Reddit sign-in votes count fully.
+- **Pairwise**: an optional "X vs Y" page feeds a Bradley–Terry ranking.
+- **Routes**: invite paths, unlock times and requirements come from [trackerpathways](https://github.com/handokota/trackerpathways) (MIT).
+
+See [`docs/PLAN.md`](docs/PLAN.md) for scope and milestones.
+
+## Layout
+
+| Path                    | Purpose                                         |
+| ----------------------- | ----------------------------------------------- |
+| `crates/core`           | `ladder-core`: pure scoring and domain logic    |
+| `crates/admin`          | `ladder-admin`: import and maintenance CLI (M2) |
+| `web`                   | Topcoat SSR site                                |
+| `migrations/`           | Postgres migrations (up/down pairs)             |
+| `data/trackerpathways/` | Vendored seed data with attribution (M2)        |
+| `docs/`                 | Plan, Topcoat reference, agent milestone prompt |
+
+## Run locally
+
+Requires the nightly toolchain (pinned), `topcoat` CLI 0.10.0, and Docker for Postgres.
+
+```sh
+cp .env.example .env
+topcoat asset bundle -p web
+cargo run -p web            # http://127.0.0.1:3000
+```
+
+Checks: `bacon` (clippy by default), or see the full suite in `CLAUDE.md`.
+
+## Attribution
+
+The tracker and route data is © the trackerpathways contributors, under the MIT License. See `data/trackerpathways/LICENSE`.

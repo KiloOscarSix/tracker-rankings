@@ -1,0 +1,186 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "web"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+authors = ["Oscar Six"]
+license = "LicenseRef-Proprietary"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+unused = { level = "warn", priority = -1 }
+unused_imports = "deny"
+unused_must_use = "deny"
+
+unreachable_pub = "warn"
+unused_qualifications = "warn"
+
+# missing_debug_implementations = "warn"
+
+rust_2018_idioms = { level = "deny", priority = -1 }
+
+# Catch accidental lifetime elision weirdness
+elided_lifetimes_in_paths = "deny"
+
+# Common correctness footguns
+noop_method_call = "deny"
+redundant_lifetimes = "deny"
+single_use_lifetimes = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+variant_size_differences = "warn"
+
+# Future compatibility
+future_incompatible = { level = "deny", priority = -1 }
+
+[workspace.lints.clippy]
+
+# Correctness / panic prevention
+
+unwrap_used = "deny"
+expect_used = "deny"
+
+panic = "deny"
+panic_in_result_fn = "deny"
+unreachable = "deny"
+
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+
+indexing_slicing = "warn"
+string_slice = "warn"
+
+unchecked_time_subtraction = "warn"
+
+# Async correctness
+
+await_holding_lock = "deny"
+await_holding_refcell_ref = "deny"
+
+unused_async = "warn"
+
+# Performance
+
+large_futures = "warn"
+large_stack_arrays = "warn"
+
+redundant_clone = "warn"
+inefficient_to_string = "warn"
+
+rc_buffer = "warn"
+clone_on_ref_ptr = "warn"
+
+# API quality
+
+semicolon_if_nothing_returned = "warn"
+
+must_use_candidate = "warn"
+return_self_not_must_use = "warn"
+too_long_first_doc_paragraph = "warn"
+derive_partial_eq_without_eq = "warn"
+implicit_hasher = "warn"
+
+missing_const_for_fn = "warn"
+
+# Error handling
+
+result_large_err = "warn"
+map_err_ignore = "warn"
+unwrap_in_result = "warn"
+error_impl_error = "warn"
+
+# Style / maintainability
+
+wildcard_imports = "warn"
+wildcard_enum_match_arm = "warn"
+
+manual_assert = "warn"
+manual_ok_or = "warn"
+
+match_same_arms = "warn"
+
+assert_is_empty = "warn"
+
+# Keeping attributes honest (excellent for AI agents)
+allow_attributes_without_reason = "warn"
+allow_attributes = "warn"
+
+# Memory and Synchronization
+mem_forget = "deny"
+mutex_atomic = "warn"
+rc_mutex = "warn"
+
+# Pedantic + nursery
+
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+
+# Noise reductions
+
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+struct_excessive_bools = "allow"
+too_many_lines = "allow"
+
+similar_names = "allow"
+
+# Often counterproductive in real systems
+implicit_return = "allow"
+single_call_fn = "allow"
+single_match_else = "allow"
+
+# Conflicts with `unreachable_pub`
+redundant_pub_crate = "allow"
+
+[workspace.dependencies]
+# Add entries from the pre-approved set (rust-template / zayden root Cargo.toml),
+# copying their feature sets, as milestones need them. Cargo warns on unused entries.
+
+# -- Errors
+thiserror = { version = "*", default-features = false }
+
+# -- CLI and configuration
+dotenvy = { version = "*", default-features = false }
+
+# -- Async runtime
+tokio = { version = "*", default-features = false }
+
+# -- Observability
+tracing = { version = "*", default-features = false }
+tracing-subscriber = { version = "*", default-features = false }
+
+# -- Frontend (Topcoat)
+topcoat = { version = "0.10", default-features = false }
+
+[profile.dev]
+opt-level = 0
+debug = false
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 256
+lto = false
+
+[profile.dev.build-override]
+opt-level = 3
+debug = false
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+debug = false
+debug-assertions = false
+overflow-checks = false
+incremental = false
+

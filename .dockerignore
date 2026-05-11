@@ -1,0 +1,9 @@
+target/
+.git/
+.env
+.env.*
+!.env.example
+rust-toolchain.toml
+*.md
+docs/
+scratch/

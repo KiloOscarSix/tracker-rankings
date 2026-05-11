@@ -1,0 +1,132 @@
+default_job = "clippy"
+
+[jobs.clippy]
+command = [
+    "cargo",
+    "clippy",
+    "--workspace",
+    "--all-targets",
+    "--color",
+    "always",
+    "--",
+    "-D",
+    "warnings",
+]
+need_stdout = false
+
+[jobs.fmt]
+command = ["cargo", "fmt", "--all", "--check"]
+need_stdout = true
+
+[jobs.test]
+command = ["cargo", "test", "--workspace", "--all-targets", "--color", "always"]
+need_stdout = true
+
+[jobs.nextest]
+command = [
+    "cargo",
+    "nextest",
+    "run",
+    "--workspace",
+    "--all-targets",
+    "--hide-progress-bar",
+    "--failure-output",
+    "final",
+]
+analyzer = "nextest"
+need_stdout = true
+
+[jobs.build]
+command = [
+    "cargo",
+    "build",
+    "--workspace",
+    "--all-targets",
+    "--color",
+    "always",
+]
+need_stdout = false
+
+[jobs.clippy-core]
+command = [
+    "cargo",
+    "clippy",
+    "-p",
+    "ladder-core",
+    "--all-targets",
+    "--color",
+    "always",
+    "--",
+    "-D",
+    "warnings",
+]
+need_stdout = false
+
+[jobs.test-core]
+command = ["cargo", "test", "-p", "ladder-core", "--all-targets", "--color", "always"]
+need_stdout = true
+
+[jobs.clippy-web]
+command = [
+    "cargo",
+    "clippy",
+    "-p",
+    "web",
+    "--all-targets",
+    "--color",
+    "always",
+    "--",
+    "-D",
+    "warnings",
+]
+need_stdout = false
+
+[jobs.test-web]
+command = ["cargo", "test", "-p", "web", "--all-targets", "--color", "always"]
+need_stdout = true
+
+[jobs.check-web]
+command = [
+    "cargo",
+    "check",
+    "-p",
+    "web",
+    "--all-targets",
+    "--color",
+    "always",
+]
+need_stdout = false
+
+[jobs.check-offline-web]
+command = [
+    "cargo",
+    "check",
+    "-p",
+    "web",
+    "--all-targets",
+    "--color",
+    "always",
+]
+need_stdout = false
+env.SQLX_OFFLINE = "true"
+
+[jobs.bundle-web]
+command = ["topcoat", "asset", "bundle", "-p", "web"]
+need_stdout = true
+
+[jobs.check-offline]
+command = [
+    "cargo",
+    "check",
+    "--workspace",
+    "--all-targets",
+    "--color",
+    "always",
+]
+need_stdout = false
+env.SQLX_OFFLINE = "true"
+
+[exports.locations]
+auto = true
+path = ".bacon-locations"
+line_format = "{kind} {path}:{line}:{column} {message}"

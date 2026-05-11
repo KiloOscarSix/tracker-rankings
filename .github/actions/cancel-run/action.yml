@@ -1,0 +1,14 @@
+name: Cancel the run
+description: >
+  Cancels the whole workflow run. Used as an `if: failure()` trailing step on the
+  slow checks that race the image build, so a failing check kills the in-flight
+  build instead of letting it run to completion.
+
+runs:
+  using: composite
+  steps:
+    - run: gh run cancel "$GITHUB_RUN_ID" || echo "::warning::could not cancel the run"
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
