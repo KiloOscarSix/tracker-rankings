@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS routes;
+
+DROP TABLE IF EXISTS trackers;
+

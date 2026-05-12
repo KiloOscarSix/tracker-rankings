@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO trackers (\n             slug, name, listed, abbr, raw_type, description, country,\n             founded_year, unlock_days, unlock_reqs, source_sha\n         )\n         SELECT u.slug, u.name, TRUE, u.abbr, u.raw_type, u.description,\n                u.country, u.founded_year, u.unlock_days, u.unlock_reqs, $10\n         FROM UNNEST(\n             $1::text[], $2::text[], $3::text[], $4::text[], $5::text[],\n             $6::text[], $7::smallint[], $8::integer[], $9::text[]\n         ) AS u(\n             slug, name, abbr, raw_type, description, country,\n             founded_year, unlock_days, unlock_reqs\n         )\n         ON CONFLICT (name) DO UPDATE SET\n             slug = EXCLUDED.slug,\n             listed = TRUE,\n             abbr = EXCLUDED.abbr,\n             raw_type = EXCLUDED.raw_type,\n             description = EXCLUDED.description,\n             country = EXCLUDED.country,\n             founded_year = EXCLUDED.founded_year,\n             unlock_days = EXCLUDED.unlock_days,\n             unlock_reqs = EXCLUDED.unlock_reqs,\n             source_sha = EXCLUDED.source_sha,\n             updated_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Int2Array",
+        "Int4Array",
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "86e90844d1b9e7e9b7571cd701d8fdbe1c6db0c7b814c153361a2d8ca433536e"
+}

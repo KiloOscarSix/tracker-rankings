@@ -144,11 +144,35 @@ redundant_pub_crate = "allow"
 # Add entries from the pre-approved set (rust-template / zayden root Cargo.toml),
 # copying their feature sets, as milestones need them. Cargo warns on unused entries.
 
+# -- Workspace members
+ladder-core = { path = "./crates/core" }
+
 # -- Errors
 thiserror = { version = "*", default-features = false }
 
+# -- Serialization
+serde = { version = "*", default-features = false }
+serde_json = { version = "*", default-features = false }
+
 # -- CLI and configuration
+clap = { version = "*", default-features = false, features = [
+  "std",
+  "help",
+  "usage",
+  "error-context",
+  "suggestions",
+  "derive",
+  "env",
+] }
 dotenvy = { version = "*", default-features = false }
+
+# -- Database
+sqlx = { version = "*", default-features = false, features = [
+  "macros",
+  "postgres",
+  "tls-rustls-aws-lc-rs",
+  "runtime-tokio",
+] }
 
 # -- Async runtime
 tokio = { version = "*", default-features = false }

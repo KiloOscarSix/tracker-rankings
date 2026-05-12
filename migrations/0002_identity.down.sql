@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS voters;
+
+DROP TABLE IF EXISTS anon_voters;
+
+DROP TABLE IF EXISTS sessions;
+
+DROP TABLE IF EXISTS accounts;
+
+DROP TYPE IF EXISTS voter_kind;
+
+DROP TYPE IF EXISTS oauth_provider;
+

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH m AS (\n             INSERT INTO memberships (voter_id, tracker_id, status)\n             SELECT $1, id, 'current' FROM trackers WHERE slug = 'aither'\n             RETURNING voter_id, tracker_id\n         )\n         INSERT INTO ratings (voter_id, tracker_id, axis, score)\n         SELECT voter_id, tracker_id, 'overall', 4 FROM m",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c70a9d501c3e439ac0c8affbc2e64adcc210f6eeda3affbf87c1969067e34cc2"
+}

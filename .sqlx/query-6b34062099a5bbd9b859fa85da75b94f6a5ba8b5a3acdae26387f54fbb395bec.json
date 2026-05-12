@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n             (SELECT count(*) FROM trackers WHERE listed) AS \"listed!\",\n             (SELECT count(*) FROM trackers WHERE NOT listed) AS \"stubs!\",\n             (SELECT count(*) FROM routes) AS \"routes!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "listed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "stubs!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "routes!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6b34062099a5bbd9b859fa85da75b94f6a5ba8b5a3acdae26387f54fbb395bec"
+}

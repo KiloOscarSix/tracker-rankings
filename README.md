@@ -13,21 +13,25 @@ See [`docs/PLAN.md`](docs/PLAN.md) for scope and milestones.
 | Path                    | Purpose                                         |
 | ----------------------- | ----------------------------------------------- |
 | `crates/core`           | `ladder-core`: pure scoring and domain logic    |
-| `crates/admin`          | `ladder-admin`: import and maintenance CLI (M2) |
+| `crates/admin`          | `ladder-admin`: import and maintenance CLI      |
 | `web`                   | Topcoat SSR site                                |
 | `migrations/`           | Postgres migrations (up/down pairs)             |
-| `data/trackerpathways/` | Vendored seed data with attribution (M2)        |
+| `data/trackerpathways/` | Vendored seed data with attribution             |
 | `docs/`                 | Plan, Topcoat reference, agent milestone prompt |
 
 ## Run locally
 
-Requires the nightly toolchain (pinned), `topcoat` CLI 0.10.0, and Docker for Postgres.
+Requires the nightly toolchain (pinned), `topcoat` CLI 0.10.0, `sqlx-cli` 0.9, and Docker for Postgres.
 
 ```sh
-cp .env.example .env
+cp .env.example .env                 # point DATABASE_URL at your Postgres
+sqlx migrate run
+cargo run -p ladder-admin -- import  # idempotent; never touches votes
 topcoat asset bundle -p web
-cargo run -p web            # http://127.0.0.1:3000
+cargo run -p web                     # http://127.0.0.1:3000
 ```
+
+To re-vendor the seed, follow the command in `data/trackerpathways/SOURCE` and update its commit, date, checksum and counts.
 
 Checks: `bacon` (clippy by default), or see the full suite in `CLAUDE.md`.
 

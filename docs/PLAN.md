@@ -64,11 +64,12 @@ Record all of the above in `.claude/REFERENCES.md`.
 
 ## Data model (Postgres)
 - **`trackers`:** `id, slug, name, abbr, categories text[]` (normalised), `raw_type, country, founded_year, description, unlock_days, unlock_reqs, source_sha, updated_at`.
+  - `listed = false` marks a stub: a route endpoint that upstream's `trackerInfo` does not describe. Stubs have no info columns and cannot be rated.
 - **`routes`:** `source_id, target_id, days, reqs, active, updated_label`. PK is (source, target).
 - **`accounts`:** `id, provider ('discord'|'reddit'), provider_subject, display_name, provider_created_at, created_at`.
   - No email.
   - Provider account age feeds the vote weight.
-- **`sessions`:** follows zayden's pattern.
+- **`sessions`:** follows zayden's pattern, but keyed on a SHA-256 `token_hash` rather than the raw token.
 - **`anon_voters`:** `id, fingerprint_hmac, created_at`.
   - The HMAC is keyed with a server secret over a long-lived cookie id, the /24 or /48 IP prefix and the user agent.
   - Raw IPs and user agents are never stored.
@@ -116,7 +117,8 @@ One milestone per session and per small set of commits. Never commit without the
 - [x] **M1: Scaffold and docs.**
   - Workspace, tooling copied from zayden, `.env.example`, `.gitignore`, README, `CLAUDE.md`, `.claude/REFERENCES.md`, `docs/topcoat/`.
   - A minimal Topcoat `web` with a home page and a 404 page. CI covers fmt, clippy, test and deny.
-- [ ] **M2: Schema and import.**
+- [x] **M2: Schema and import.**
+  - Deviation: 19 route endpoints missing from `trackerInfo` are imported as stub trackers (`listed = false`). Sessions store a 32-byte `token_hash`, not the raw token. `categories` stays empty until M3's normalisation.
   - Vendor `data/trackerpathways/{trackers.json,LICENSE,SOURCE}`. `SOURCE` records the upstream commit SHA and date. Fetch the file with `gh api repos/handokota/trackerpathways/contents/src/data/trackers.json`, not the Cloudflare-protected site.
   - Paired up/down migrations for every table in the data model.
   - `crates/admin` with `import` (idempotent upsert keyed on tracker name, never touches votes).

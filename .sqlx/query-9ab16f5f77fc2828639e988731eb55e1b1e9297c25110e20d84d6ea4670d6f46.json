@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT unlock_days FROM trackers WHERE slug = 'aither'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "unlock_days",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "unlock_days"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "9ab16f5f77fc2828639e988731eb55e1b1e9297c25110e20d84d6ea4670d6f46"
+}

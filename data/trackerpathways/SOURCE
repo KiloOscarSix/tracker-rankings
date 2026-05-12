@@ -1,0 +1,8 @@
+repository: https://github.com/handokota/trackerpathways
+path: src/data/trackers.json
+fetched: 2026-10-20
+sha256: 6929f42cf8e78c87057a2ad1f2c8981d61d6c11218e72fac1dc735b4d883d667
+trackers: 182
+routes: 598
+unlisted_route_endpoints: 19
+revendor: gh api "repos/handokota/trackerpathways/contents/src/data/trackers.json?ref=<commit>" --jq .content | base64 -d > trackers.json

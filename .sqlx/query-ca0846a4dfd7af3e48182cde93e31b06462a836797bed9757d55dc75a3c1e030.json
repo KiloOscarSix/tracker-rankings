@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM routes r\n         USING trackers s, trackers t\n         WHERE r.source_id = s.id\n           AND r.target_id = t.id\n           AND (s.name, t.name) NOT IN (\n               SELECT * FROM UNNEST($1::text[], $2::text[])\n           )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ca0846a4dfd7af3e48182cde93e31b06462a836797bed9757d55dc75a3c1e030"
+}

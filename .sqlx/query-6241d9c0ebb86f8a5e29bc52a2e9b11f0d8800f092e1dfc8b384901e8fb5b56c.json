@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO routes (\n             source_id, target_id, days, reqs, active, updated_label\n         )\n         SELECT s.id, t.id, u.days, u.reqs, u.active, u.updated_label\n         FROM UNNEST(\n             $1::text[], $2::text[], $3::integer[], $4::text[], $5::text[],\n             $6::text[]\n         ) AS u(source, target, days, reqs, active, updated_label)\n         JOIN trackers s ON s.name = u.source\n         JOIN trackers t ON t.name = u.target\n         ON CONFLICT (source_id, target_id) DO UPDATE SET\n             days = EXCLUDED.days,\n             reqs = EXCLUDED.reqs,\n             active = EXCLUDED.active,\n             updated_label = EXCLUDED.updated_label",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "TextArray",
+        "Int4Array",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6241d9c0ebb86f8a5e29bc52a2e9b11f0d8800f092e1dfc8b384901e8fb5b56c"
+}

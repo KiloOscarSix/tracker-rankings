@@ -25,8 +25,7 @@ env:
   TAILWIND_VERSION: 4.3.2
   TAILWIND_SHA256: 5036c4fb4328e0bcdbb6065c70d8ac9452e0d4c947113a788a8f94fd390425c1
 
-# Milestone 2 adds a postgres:18-alpine service to `test` and an `sqlx prepare --check`
-# job (see zayden's ci.yml); milestone 8 adds the image build.
+# Milestone 8 adds the image build.
 jobs:
   fmt:
     name: rustfmt
@@ -73,6 +72,22 @@ jobs:
       contents: read
       actions: write
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ladder
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/ladder
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install stable --profile minimal
@@ -94,3 +109,49 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
         with:
           command: check
+
+  sqlx:
+    name: sqlx prepare --check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ladder
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      SQLX_OFFLINE: false
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/ladder
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: true
+      - name: Install sqlx-cli
+        run: |
+          version="$(grep -A1 '^name = "sqlx"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')"
+          test -n "$version"
+          cargo install "sqlx-cli@${version}" --locked --no-default-features \
+            --features postgres,rustls
+      - name: Apply migrations
+        run: sqlx migrate run
+      - *fetch-tailwind
+      - name: Check the offline cache is current
+        run: >-
+          cargo sqlx prepare --workspace --check -- --all-targets --locked
+      - uses: ./.github/actions/cancel-run
+        if: failure()
