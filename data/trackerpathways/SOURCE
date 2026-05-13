@@ -1,5 +1,7 @@
 repository: https://github.com/handokota/trackerpathways
 path: src/data/trackers.json
+commit: b2fde0bffa8266e8366d9c0a7fd63a100a38ad5c
+committed: 2026-10-16
 fetched: 2026-10-20
 sha256: 6929f42cf8e78c87057a2ad1f2c8981d61d6c11218e72fac1dc735b4d883d667
 trackers: 182

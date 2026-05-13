@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT categories FROM trackers WHERE slug = 'aither'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "categories",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "categories"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "865870c7b5f4f12e0acaae9274693d851f39cf4a36afdc6369e9b95b8caa200e"
+}

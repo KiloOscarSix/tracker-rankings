@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use ladder_core::category::Category;
 use ladder_core::slug::slugify;
 
 use crate::error::ImportError;
@@ -18,6 +19,8 @@ pub(crate) struct ListedRows {
     pub(crate) names: Vec<String>,
     pub(crate) abbrs: Vec<String>,
     pub(crate) raw_types: Vec<String>,
+    /// Category keys joined with ','; see `upsert_listed`.
+    pub(crate) categories: Vec<String>,
     pub(crate) descriptions: Vec<String>,
     pub(crate) countries: Vec<Option<String>>,
     pub(crate) founded_years: Vec<Option<i16>>,
@@ -67,6 +70,11 @@ fn listed_rows(
         rows.names.push(name.clone());
         rows.abbrs.push(info.abbr.clone());
         rows.raw_types.push(info.raw_type.clone());
+        let categories = Category::normalise(&info.raw_type).map_err(|source| {
+            ImportError::Category { tracker: name.clone(), source }
+        })?;
+        rows.categories
+            .push(categories.iter().map(|c| c.key()).collect::<Vec<_>>().join(","));
         rows.descriptions.push(info.description.clone());
         rows.countries.push(non_empty(&info.country));
         rows.founded_years.push(info.birthdate.year(name)?);

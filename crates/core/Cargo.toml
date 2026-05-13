@@ -12,3 +12,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true, features = ["std"] }

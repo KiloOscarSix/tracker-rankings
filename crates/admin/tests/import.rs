@@ -50,6 +50,21 @@ async fn importing_twice_gives_182_trackers_and_598_routes(pool: PgPool) {
     .await
     .unwrap();
     assert_eq!(unlock_days, Some(240));
+
+    let uncategorised = sqlx::query_scalar!(
+        r#"SELECT count(*) AS "n!" FROM trackers WHERE listed AND categories = '{}'"#
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(uncategorised, 0);
+
+    let aither =
+        sqlx::query_scalar!("SELECT categories FROM trackers WHERE slug = 'aither'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(aither, ["movies-tv"]);
 }
 
 #[sqlx::test(migrations = "../../migrations")]

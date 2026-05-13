@@ -86,9 +86,8 @@ Record all of the above in `.claude/REFERENCES.md`.
 ## Scoring (`crates/core`, pure and unit-tested)
 - **Weights** (configurable):
   - OAuth account: 1.0.
-  - OAuth account younger than 30 days on its provider: 0.5.
-  - Anonymous: 0.25.
-  - Anonymous votes are capped at 30% of a tracker's total weight.
+  - OAuth account younger than 30 days on its provider: 0.8. Age is measured at each refresh, so a young account's votes reach full weight once it turns 30 days.
+  - Anonymous: 0.7. There is no cap on the anonymous share.
 - **Per-axis score:** weighted Bayesian average `(C·m + Σw·s) / (C + Σw)`.
   - `m` is the global axis mean and `C` is the confidence constant.
   - Each score is shown with its effective vote count.
@@ -124,10 +123,11 @@ One milestone per session and per small set of commits. Never commit without the
   - `crates/admin` with `import` (idempotent upsert keyed on tracker name, never touches votes).
   - Add the postgres service and the `sqlx prepare --check` job to CI, and commit `.sqlx/`.
   - **Done when:** a `sqlx::test` shows the import, run twice, gives 182 trackers and 598 routes. Recount if upstream changed, and record the counts in `SOURCE`.
-- [ ] **M3: Core logic (`ladder-core`).**
-  - Category normalisation table, vote weights and anonymous-vote cap, Bayesian axis score, percentile tiers with an "unranked" threshold, Bradley–Terry (MM).
+- [x] **M3: Core logic (`ladder-core`).**
+  - Deviation: the anonymous cap is dropped and the weights are now 1.0, 0.8 (young account) and 0.7 (anonymous). `admin import` now fills `categories` and fails on an unmapped token. SOURCE now records the upstream commit, and LICENSE is vendored.
+  - Category normalisation table, vote weights, Bayesian axis score, percentile tiers with an "unranked" threshold, Bradley–Terry (MM).
   - All of it is pure and configurable through a `ScoringConfig` struct.
-  - **Done when:** tests in `crates/core/tests/` cover Bayesian edge cases (no votes, one vote), the anonymous cap, Bradley–Terry converging on a fixture with a known order, and category mapping of every distinct upstream `type` token.
+  - **Done when:** tests in `crates/core/tests/` cover Bayesian edge cases (no votes, one vote), the vote-weight classes, Bradley–Terry converging on a fixture with a known order, and category mapping of every distinct upstream `type` token.
 - [ ] **M4: Read-only site.**
   - `/` rankings (category filter, sort by axis, tier badges, confidence). Until M6 there are no votes, so every tracker shows "unranked".
   - `/t/{slug}`: details, invite-rank requirements, outgoing "next steps" routes with days and requirements, incoming routes, official-recruitments wiki link.
@@ -144,7 +144,7 @@ One milestone per session and per small set of commits. Never commit without the
   - Membership declaration, then 1–5 ratings on the five axes, with re-voting overwriting the previous vote.
   - A background refresh of `tracker_scores`, plus `admin recompute` and `admin void-voter`.
   - `/me`: memberships, my votes and "delete my data".
-  - **Done when:** tests show an anonymous vote carries 0.25 weight, re-voting overwrites, and deletion cascades.
+  - **Done when:** tests show an anonymous vote carries 0.7 weight, re-voting overwrites, and deletion cascades.
 - [ ] **M7: Pairwise.**
   - `/compare` shows matchups drawn from the voter's memberships or from one category.
   - The Bradley–Terry ranking is refreshed into `pairwise_scores`.
@@ -167,7 +167,7 @@ One milestone per session and per small set of commits. Never commit without the
 ## Verification
 - `cargo clippy --workspace -- -D warnings`, `cargo fmt --check`, `cargo deny check`.
 - `cargo test --workspace`:
-  - Core unit tests: Bayesian edge cases, weight caps, Bradley–Terry convergence on a known fixture, category mapping.
+  - Core unit tests: Bayesian edge cases, weight classes, Bradley–Terry convergence on a known fixture, category mapping.
   - `sqlx::test` integration tests against a throwaway Postgres: running the import twice is idempotent and gives 182 trackers / 598 routes; a re-vote overwrites; account deletion cascades.
 - `docker compose up`, then run `admin import`. Check in the built-in browser:
   - The rankings page renders.

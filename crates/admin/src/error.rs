@@ -2,6 +2,8 @@ use std::io;
 use std::num::ParseIntError;
 use std::path::PathBuf;
 
+use ladder_core::error::UnknownCategoryToken;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ImportError {
     #[error("could not read {}: {source}", path.display())]
@@ -20,6 +22,12 @@ pub enum ImportError {
         value: String,
         #[source]
         source: ParseIntError,
+    },
+    #[error("tracker {tracker:?} has an unmapped type token: {source}")]
+    Category {
+        tracker: String,
+        #[source]
+        source: UnknownCategoryToken,
     },
     #[error("unlockInviteClass names {0:?}, which trackerInfo does not describe")]
     UnlockWithoutTracker(String),

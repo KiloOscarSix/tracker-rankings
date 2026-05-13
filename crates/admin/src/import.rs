@@ -47,16 +47,17 @@ async fn upsert_listed(
     let result = sqlx::query!(
         "INSERT INTO trackers (
              slug, name, listed, abbr, raw_type, description, country,
-             founded_year, unlock_days, unlock_reqs, source_sha
+             founded_year, unlock_days, unlock_reqs, source_sha, categories
          )
          SELECT u.slug, u.name, TRUE, u.abbr, u.raw_type, u.description,
-                u.country, u.founded_year, u.unlock_days, u.unlock_reqs, $10
+                u.country, u.founded_year, u.unlock_days, u.unlock_reqs, $10,
+                string_to_array(u.categories, ',')
          FROM UNNEST(
              $1::text[], $2::text[], $3::text[], $4::text[], $5::text[],
-             $6::text[], $7::smallint[], $8::integer[], $9::text[]
+             $6::text[], $7::smallint[], $8::integer[], $9::text[], $11::text[]
          ) AS u(
              slug, name, abbr, raw_type, description, country,
-             founded_year, unlock_days, unlock_reqs
+             founded_year, unlock_days, unlock_reqs, categories
          )
          ON CONFLICT (name) DO UPDATE SET
              slug = EXCLUDED.slug,
@@ -68,6 +69,7 @@ async fn upsert_listed(
              founded_year = EXCLUDED.founded_year,
              unlock_days = EXCLUDED.unlock_days,
              unlock_reqs = EXCLUDED.unlock_reqs,
+             categories = EXCLUDED.categories,
              source_sha = EXCLUDED.source_sha,
              updated_at = now()",
         &rows.slugs,
@@ -80,6 +82,7 @@ async fn upsert_listed(
         &rows.unlock_days as &[Option<i32>],
         &rows.unlock_reqs as &[Option<String>],
         commit,
+        &rows.categories,
     )
     .execute(conn)
     .await?;

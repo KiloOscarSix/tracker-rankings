@@ -1139,6 +1139,10 @@ dependencies = [
 [[package]]
 name = "ladder-core"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "thiserror",
+]
 
 [[package]]
 name = "lazy_static"
