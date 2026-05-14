@@ -1,3 +1,4 @@
+pub mod axis;
 pub mod bradley_terry;
 pub mod category;
 pub mod config;

@@ -128,7 +128,8 @@ One milestone per session and per small set of commits. Never commit without the
   - Category normalisation table, vote weights, Bayesian axis score, percentile tiers with an "unranked" threshold, Bradley–Terry (MM).
   - All of it is pure and configurable through a `ScoringConfig` struct.
   - **Done when:** tests in `crates/core/tests/` cover Bayesian edge cases (no votes, one vote), the vote-weight classes, Bradley–Terry converging on a fixture with a known order, and category mapping of every distinct upstream `type` token.
-- [ ] **M4: Read-only site.**
+- [x] **M4: Read-only site.**
+  - Deviation: `ladder-core` gains an `Axis` enum. Stub trackers get a minimal page, not a 404, because routes link to them. All 31 registry components are installed (lucide icons vendored in `web/icons/`). An unknown `category` or `sort` value returns 400.
   - `/` rankings (category filter, sort by axis, tier badges, confidence). Until M6 there are no votes, so every tracker shows "unranked".
   - `/t/{slug}`: details, invite-rank requirements, outgoing "next steps" routes with days and requirements, incoming routes, official-recruitments wiki link.
   - `/about`: methodology, attribution and privacy.

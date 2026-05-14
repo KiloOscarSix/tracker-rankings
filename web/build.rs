@@ -1,3 +1,4 @@
+use topcoat::icon::iconify;
 use topcoat::tailwind::BuildConfig;
 
 const TAILWIND_CLI: &str = "TAILWIND_CLI";
@@ -20,8 +21,15 @@ fn main() {
         println!("cargo::error=tailwind failed: {error}");
     }
 
+    if let Err(error) =
+        iconify::BuildConfig::new().cache_dir("icons").icon_set("lucide").stage()
+    {
+        println!("cargo::error=iconify failed: {error}");
+    }
+
     println!("cargo::rerun-if-env-changed={TAILWIND_CLI}");
     println!("cargo::rerun-if-changed=styles.css");
     println!("cargo::rerun-if-changed=src");
     println!("cargo::rerun-if-changed=assets");
+    println!("cargo::rerun-if-changed=icons");
 }

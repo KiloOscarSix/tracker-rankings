@@ -12,11 +12,14 @@ workspace = true
 
 [dependencies]
 dotenvy = { workspace = true }
+ladder-core = { workspace = true }
+sqlx = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["macros", "net", "rt-multi-thread"] }
 topcoat = { workspace = true, features = [
   "asset",
   "compression",
+  "icon-iconify",
   "router",
   "runtime",
   "serve",
@@ -25,5 +28,10 @@ topcoat = { workspace = true, features = [
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["ansi", "fmt"] }
 
+[dev-dependencies]
+http-body-util = { workspace = true }
+ladder-admin = { workspace = true }
+sqlx = { workspace = true, features = ["migrate"] }
+
 [build-dependencies]
-topcoat = { workspace = true, features = ["tailwind"] }
+topcoat = { workspace = true, features = ["icon-iconify", "tailwind", "ui"] }

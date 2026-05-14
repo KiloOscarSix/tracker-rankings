@@ -13,4 +13,22 @@ pub enum StartupError {
     Listen(#[source] io::Error),
     #[error("server error: {0}")]
     Serve(#[source] io::Error),
+    #[error("DATABASE_URL is not set")]
+    DatabaseUrl,
+    #[error("could not connect to Postgres: {0}")]
+    Database(#[from] sqlx::Error),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum PageError {
+    #[error("{0} is not registered as app context")]
+    MissingContext(&'static str),
+    #[error("database error: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error(transparent)]
+    Category(#[from] ladder_core::error::UnknownCategoryKey),
+    #[error(transparent)]
+    Axis(#[from] ladder_core::error::UnknownAxisKey),
+    #[error("negative vote count: {0}")]
+    NegativeCount(#[from] std::num::TryFromIntError),
 }

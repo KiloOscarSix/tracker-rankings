@@ -145,6 +145,7 @@ redundant_pub_crate = "allow"
 # copying their feature sets, as milestones need them. Cargo warns on unused entries.
 
 # -- Workspace members
+ladder-admin = { path = "./crates/admin" }
 ladder-core = { path = "./crates/core" }
 
 # -- Errors
@@ -183,6 +184,9 @@ tracing-subscriber = { version = "*", default-features = false }
 
 # -- Frontend (Topcoat)
 topcoat = { version = "0.10", default-features = false }
+
+# -- Testing
+http-body-util = { version = "*", default-features = false }
 
 [profile.dev]
 opt-level = 0

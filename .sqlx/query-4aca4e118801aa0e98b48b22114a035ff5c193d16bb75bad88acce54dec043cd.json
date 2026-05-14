@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.slug, t.name, t.listed, r.days, r.reqs, r.active, r.updated_label\n         FROM routes r\n         JOIN trackers t ON t.id = r.source_id\n         WHERE r.target_id = $1\n         ORDER BY t.name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "listed",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "listed"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "days",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "days"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "reqs",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "reqs"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "active",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "active"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_label",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "updated_label"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4aca4e118801aa0e98b48b22114a035ff5c193d16bb75bad88acce54dec043cd"
+}

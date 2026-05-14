@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.slug, t.name, t.listed, r.days, r.reqs, r.active,\n                  r.updated_label,\n                  s.score AS \"score?\",\n                  s.effective_weight AS \"effective_weight?\",\n                  s.vote_count AS \"vote_count?\"\n           FROM routes r\n           JOIN trackers t ON t.id = r.target_id\n           LEFT JOIN tracker_scores s ON s.tracker_id = t.id AND s.axis = 'overall'\n           WHERE r.source_id = $1\n           ORDER BY s.score DESC NULLS LAST, r.days ASC NULLS LAST, t.name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "listed",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "listed"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "days",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "days"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "reqs",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "reqs"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "active",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "active"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_label",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "routes",
+            "name": "updated_label"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "score?",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "score"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "effective_weight?",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "effective_weight"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "vote_count?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "vote_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "57c70dc1cf430cfe68315d2c03e740382684b3109fee26b8f1f4d41103340709"
+}

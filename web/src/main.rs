@@ -1,6 +1,8 @@
 use std::io;
 use std::process::ExitCode;
 
+use ladder_core::config::ScoringConfig;
+use sqlx::PgPool;
 use tokio::net::TcpListener;
 use topcoat::asset::{AssetBundle, RouterBuilderAssetExt};
 use topcoat::router::Router;
@@ -29,10 +31,14 @@ async fn run() -> Result<(), StartupError> {
     let _ = dotenvy::dotenv();
 
     let addr = config::bind_addr()?;
+    let pool = PgPool::connect(&config::database_url()?).await?;
     let assets = AssetBundle::load().map_err(StartupError::AssetBundle)?;
     let listener = TcpListener::bind(addr).await.map_err(StartupError::Listen)?;
 
-    let base = Router::builder().assets(assets);
+    let base = Router::builder()
+        .app_context(pool)
+        .app_context(ScoringConfig::default())
+        .assets(assets);
 
     info!("Listening on {addr}");
     topcoat::serve(listener, router(base)).await.map_err(StartupError::Serve)

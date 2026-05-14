@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT tracker_id, axis::text AS \"axis!\", score, effective_weight,\n                  vote_count\n           FROM tracker_scores\n           WHERE tracker_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tracker_id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "tracker_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "axis!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "score",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "score"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "effective_weight",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "effective_weight"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "vote_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "vote_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b35d36656441e4ed0a5fced53fd60ad3dbce8496cff9c65d71a3163b1d5fca9c"
+}

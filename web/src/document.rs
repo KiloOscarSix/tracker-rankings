@@ -18,10 +18,12 @@ pub(crate) async fn root_layout(slot: Slot<'_>) -> Result<impl View> {
                 if error.downcast_ref::<NotFoundError>().is_none() {
                     return Err(error);
                 }
-                Ok(view! {
-                    (StatusCode::NOT_FOUND)
-                    document(not_found_page())
-                })
+                Ok(
+                    view! {
+                        (StatusCode::NOT_FOUND)
+                        document(not_found_page())
+                    },
+                )
             },
             document((slot))
         )
@@ -32,7 +34,7 @@ pub(crate) async fn root_layout(slot: Slot<'_>) -> Result<impl View> {
 async fn document(#[default] child: Child<'_>) -> Result<impl View> {
     Ok(view! {
         <!DOCTYPE html>
-        <html lang="en">
+        <html lang="en" class="dark">
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,8 +42,33 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                 <link rel="stylesheet" href=(STYLESHEET)>
                 topcoat::runtime::script()
             </head>
-            <body class="min-h-screen bg-neutral-950 text-neutral-100 antialiased">
+            <body class="min-h-screen bg-background text-foreground antialiased">
+                <header class="border-b border-border">
+                    <div
+                        class="mx-auto flex max-w-6xl items-baseline justify-between px-4 py-3"
+                    >
+                        <a href="/" class="font-semibold tracking-tight">(SITE_NAME)</a>
+                        <nav class="flex gap-4 text-sm text-muted-foreground">
+                            <a href="/" class="hover:text-foreground">"Rankings"</a>
+                            <a href="/about" class="hover:text-foreground">"About"</a>
+                        </nav>
+                    </div>
+                </header>
                 (child)
+                <footer class="mt-16 border-t border-border">
+                    <p
+                        class="mx-auto max-w-6xl px-4 py-6 text-xs text-muted-foreground"
+                    >
+                        "Tracker and route data from "
+                        <a
+                            href="https://github.com/handokota/trackerpathways"
+                            class="underline hover:text-foreground"
+                        >
+                            "trackerpathways"
+                        </a>
+                        " (MIT)."
+                    </p>
+                </footer>
             </body>
         </html>
     })

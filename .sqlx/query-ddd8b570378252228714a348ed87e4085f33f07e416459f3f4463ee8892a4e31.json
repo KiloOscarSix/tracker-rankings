@@ -1,0 +1,160 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, slug, name, listed, abbr, raw_type, description, categories,\n                country, founded_year, unlock_days, unlock_reqs\n         FROM trackers\n         WHERE slug = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "listed",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "listed"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "abbr",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "abbr"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "raw_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "raw_type"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "categories",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "categories"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "country",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "country"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "founded_year",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "founded_year"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "unlock_days",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "unlock_days"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "unlock_reqs",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "unlock_reqs"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "ddd8b570378252228714a348ed87e4085f33f07e416459f3f4463ee8892a4e31"
+}
