@@ -1,6 +1,34 @@
 @import "tailwindcss" source(none);
 
 @source "./src/**/*.rs";
+@source not "./src/components/accordion.rs";
+@source not "./src/components/alert.rs";
+@source not "./src/components/alert_dialog.rs";
+@source not "./src/components/avatar.rs";
+@source not "./src/components/breadcrumb.rs";
+@source not "./src/components/card.rs";
+@source not "./src/components/checkbox.rs";
+@source not "./src/components/dialog.rs";
+@source not "./src/components/dropdown_menu.rs";
+@source not "./src/components/field.rs";
+@source not "./src/components/hover_card.rs";
+@source not "./src/components/input.rs";
+@source not "./src/components/kbd.rs";
+@source not "./src/components/label.rs";
+@source not "./src/components/pagination.rs";
+@source not "./src/components/progress.rs";
+@source not "./src/components/radio_group.rs";
+@source not "./src/components/select.rs";
+@source not "./src/components/separator.rs";
+@source not "./src/components/sheet.rs";
+@source not "./src/components/sidebar.rs";
+@source not "./src/components/skeleton.rs";
+@source not "./src/components/spinner.rs";
+@source not "./src/components/switch.rs";
+@source not "./src/components/tabs.rs";
+@source not "./src/components/textarea.rs";
+@source not "./src/components/toggle.rs";
+@source not "./src/components/tooltip.rs";
 
 @custom-variant dark (&:is(.dark *));
 
