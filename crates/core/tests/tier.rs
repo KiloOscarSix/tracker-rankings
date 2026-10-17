@@ -1,6 +1,6 @@
-use ladder_core::config::ScoringConfig;
-use ladder_core::score::AxisScore;
-use ladder_core::tier::{Tier, assign_tiers};
+use rankings_core::config::ScoringConfig;
+use rankings_core::score::AxisScore;
+use rankings_core::tier::{Tier, assign_tiers};
 
 const fn scored(score: f64, effective_weight: f64) -> AxisScore {
     AxisScore { score, effective_weight, vote_count: 0 }

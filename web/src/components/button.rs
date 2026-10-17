@@ -14,7 +14,6 @@ use topcoat::view::{
 ///
 /// [`Default`] is `ButtonVariant::Primary`, used when no variant is given.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[allow(dead_code)]
 pub enum ButtonVariant {
     /// The primary-filled button for the main action.
     #[default]
@@ -34,7 +33,7 @@ impl ButtonVariant {
     ///
     /// Each variant sets its own border color. Keep border colors out of the shared
     /// base to avoid conflicting classes.
-    fn classes(self) -> StaticClass {
+    const fn classes(self) -> StaticClass {
         match self {
             Self::Primary => class!(
                 "border-transparent bg-primary text-primary-foreground shadow-xs \
@@ -63,7 +62,6 @@ impl ButtonVariant {
 ///
 /// [`Default`] is `ButtonSize::Md`, used when no size is given.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[allow(dead_code)]
 pub enum ButtonSize {
     /// A compact button.
     Sm,
@@ -78,7 +76,7 @@ pub enum ButtonSize {
 
 impl ButtonSize {
     /// Classes for the button dimensions. Text size stays the same across sizes.
-    fn classes(self) -> StaticClass {
+    const fn classes(self) -> StaticClass {
         match self {
             Self::Sm => class!("h-8 gap-1.5 rounded-md px-3"),
             Self::Md => class!("h-9 gap-2 rounded-lg px-4"),
@@ -110,7 +108,7 @@ const BASE: StaticClass = class!(
 /// }
 /// ```
 #[must_use]
-pub fn button_variants(
+pub const fn button_variants(
     variant: ButtonVariant,
     size: ButtonSize,
 ) -> Class<(StaticClass, StaticClass, StaticClass)> {

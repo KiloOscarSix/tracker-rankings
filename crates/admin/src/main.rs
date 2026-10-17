@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use ladder_admin::error::ImportError;
-use ladder_admin::{import, seed};
+use rankings_admin::error::ImportError;
+use rankings_admin::{import, seed};
 use sqlx::PgPool;
 use tracing::{error, info};
 use tracing_subscriber::filter::LevelFilter;

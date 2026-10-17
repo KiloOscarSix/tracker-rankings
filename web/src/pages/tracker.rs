@@ -1,4 +1,4 @@
-use ladder_core::axis::Axis;
+use rankings_core::axis::Axis;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::error::RouterErrorExt;

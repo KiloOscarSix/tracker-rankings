@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT bool_and(octet_length(fingerprint_hmac) = 32) AS \"ok!\" FROM anon_voters",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ok!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8ed03736e0e75527b50d0698b8d7ed261dc045c4a43dee31103330a472a04383"
+}

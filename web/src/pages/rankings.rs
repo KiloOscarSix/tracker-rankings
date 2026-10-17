@@ -1,5 +1,5 @@
-use ladder_core::axis::Axis;
-use ladder_core::category::Category;
+use rankings_core::axis::Axis;
+use rankings_core::category::Category;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::error::bad_request;

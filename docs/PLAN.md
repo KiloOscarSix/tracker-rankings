@@ -1,6 +1,6 @@
-# Tracker Ladder: project plan
+# Tracker Rankings: project plan
 
-This is the source of truth for scope and milestones. Agents work one milestone at a time (see `docs/milestone-prompt.txt`) and tick its box here when it's done. "Tracker Ladder" and the `ladder-*` crate names are working names.
+This is the source of truth for scope and milestones. Agents work one milestone at a time (see `docs/milestone-prompt.txt`) and tick its box here when it's done.
 
 ## Context
 Most private-tracker users settle on lower-tier trackers, and the top trackers take years of ladder-climbing to reach. Users need two answers: **which trackers to focus on** and **whether the next step up is worth the grind**. trackerpathways.org already maps invite routes but has no community quality signal. This site adds community voting on trackers, built on top of that route data.
@@ -29,9 +29,9 @@ Second source: the r/TrackersInfo "official recruitments" wiki (trackerpathways 
 A Cargo workspace (edition 2024) with tooling copied from **zayden**, the newest and primary exemplar (last commit 2026-10-18).
 
 ```
-crates/core/   (ladder-core) pure domain: types, category normalisation, vote weighting,
+crates/core/   (rankings-core) pure domain: types, category normalisation, vote weighting,
                Bayesian aggregation, Bradley–Terry, tier assignment (no IO)
-crates/admin/  (ladder-admin) CLI: `import` (trackerpathways JSON → DB, idempotent upsert),
+crates/admin/  (rankings-admin) CLI: `import` (trackerpathways JSON → DB, idempotent upsert),
                `recompute`, `void-voter <id>`
 web/           Topcoat SSR app: pages, OAuth, sessions, forms, sqlx queries
 migrations/    paired up/down SQL
@@ -123,24 +123,25 @@ One milestone per session and per small set of commits. Never commit without the
   - `crates/admin` with `import` (idempotent upsert keyed on tracker name, never touches votes).
   - Add the postgres service and the `sqlx prepare --check` job to CI, and commit `.sqlx/`.
   - **Done when:** a `sqlx::test` shows the import, run twice, gives 182 trackers and 598 routes. Recount if upstream changed, and record the counts in `SOURCE`.
-- [x] **M3: Core logic (`ladder-core`).**
+- [x] **M3: Core logic (`rankings-core`).**
   - Deviation: the anonymous cap is dropped and the weights are now 1.0, 0.8 (young account) and 0.7 (anonymous). `admin import` now fills `categories` and fails on an unmapped token. SOURCE now records the upstream commit, and LICENSE is vendored.
   - Category normalisation table, vote weights, Bayesian axis score, percentile tiers with an "unranked" threshold, Bradley–Terry (MM).
   - All of it is pure and configurable through a `ScoringConfig` struct.
   - **Done when:** tests in `crates/core/tests/` cover Bayesian edge cases (no votes, one vote), the vote-weight classes, Bradley–Terry converging on a fixture with a known order, and category mapping of every distinct upstream `type` token.
 - [x] **M4: Read-only site.**
-  - Deviation: `ladder-core` gains an `Axis` enum. Stub trackers get a minimal page, not a 404, because routes link to them. All 31 registry components are installed (lucide icons vendored in `web/icons/`). An unknown `category` or `sort` value returns 400.
+  - Deviation: `rankings-core` gains an `Axis` enum. Stub trackers get a minimal page, not a 404, because routes link to them. All 31 registry components are installed (lucide icons vendored in `web/icons/`). An unknown `category` or `sort` value returns 400.
   - `/` rankings (category filter, sort by axis, tier badges, confidence). Until M6 there are no votes, so every tracker shows "unranked".
   - `/t/{slug}`: details, invite-rank requirements, outgoing "next steps" routes with days and requirements, incoming routes, official-recruitments wiki link.
   - `/about`: methodology, attribution and privacy.
   - **Done when:** router tests confirm `/t/aither` lists Anthelion with "Prometheus+", and an unknown slug returns 404.
-- [ ] **M5: Identity.**
+- [x] **M5: Identity.**
+  - Deviation: sessions use `topcoat::session` (cookie `__Host-session`, always `Secure`, so local dev browses `localhost`). Rate limits use `governor` in a Topcoat layer, keyed on client IP (10/min on `/auth/*` and `/logout`). `/logout` is POST only. OAuth state and `anon_id` are 32 random bytes as unpadded base64url. Unused registry components stay on disk but are unlinked from `components.rs` and excluded from Tailwind scanning; re-link one when a page uses it.
   - Discord OAuth (adapted from `zayden/web/src/auth/`) and Reddit OAuth (scope `identity`), with the provider account age stored.
   - Sessions with pruning.
   - Anonymous voter cookie plus fingerprint HMAC: never store raw IPs or user agents.
   - Rate limits on the write routes.
   - Origin policy (CSRF).
-  - **Done when:** tests use fake OAuth providers behind a trait. The real apps get a manual check with the user's credentials.
+  - **Done when:** tests use fake OAuth providers behind a trait. The real Discord app gets a manual check with the user's credentials; the Reddit check is the last milestone below.
 - [ ] **M6: Voting.**
   - Membership declaration, then 1–5 ratings on the five axes, with re-voting overwriting the previous vote.
   - A background refresh of `tracker_scores`, plus `admin recompute` and `admin void-voter`.
@@ -155,6 +156,9 @@ One milestone per session and per small set of commits. Never commit without the
   - `compose.yaml`: postgres:18 with a healthcheck, `${X:?}` required env vars, port bound to 127.0.0.1.
   - CI image job.
   - **Done when:** `docker compose up` followed by `admin import` serves the site locally, verified in the browser.
+- [ ] **Reddit sign-in check.**
+  - Deferred from M5: Reddit closed self-service API apps on 2025-11-11; access was requested on 2026-10-21.
+  - **Done when:** once Reddit approves the app, signing in with it works on the local site and the new `accounts` row has `provider_created_at` set.
 
 ## Future work (not in this build)
 - **"What should I do next?" planner:**

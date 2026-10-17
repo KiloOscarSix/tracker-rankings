@@ -145,8 +145,8 @@ redundant_pub_crate = "allow"
 # copying their feature sets, as milestones need them. Cargo warns on unused entries.
 
 # -- Workspace members
-ladder-admin = { path = "./crates/admin" }
-ladder-core = { path = "./crates/core" }
+rankings-admin = { path = "./crates/admin" }
+rankings-core = { path = "./crates/core" }
 
 # -- Errors
 thiserror = { version = "*", default-features = false }
@@ -181,6 +181,20 @@ tokio = { version = "*", default-features = false }
 # -- Observability
 tracing = { version = "*", default-features = false }
 tracing-subscriber = { version = "*", default-features = false }
+
+# -- Identity
+base64 = { version = "*", default-features = false }
+governor = { version = "0.10", default-features = false, features = [
+  "std",
+  "quanta",
+] }
+hmac = { version = "0.13", default-features = false }
+oauth2 = { version = "*", default-features = false, features = [
+  "reqwest",
+  "rustls-tls",
+] }
+rustls = { version = "*", default-features = false }
+sha2 = { version = "*", default-features = false }
 
 # -- Frontend (Topcoat)
 topcoat = { version = "0.10", default-features = false }

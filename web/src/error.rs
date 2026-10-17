@@ -17,6 +17,20 @@ pub enum StartupError {
     DatabaseUrl,
     #[error("could not connect to Postgres: {0}")]
     Database(#[from] sqlx::Error),
+    #[error("COOKIE_KEY must be set to standard base64 of at least 64 random bytes")]
+    CookieKey,
+    #[error("PUBLIC_BASE_URL must be an http:// or https:// origin")]
+    PublicBaseUrl,
+    #[error("{0} sign-in needs both its client id and client secret")]
+    PartialCredentials(&'static str),
+    #[error("REDDIT_USER_AGENT is required when Reddit sign-in is configured")]
+    RedditUserAgent,
+    #[error("invalid TRUSTED_PROXIES entry `{0}`")]
+    TrustedProxy(String),
+    #[error("invalid OAuth endpoint URL: {0}")]
+    OAuthUrl(#[from] oauth2::url::ParseError),
+    #[error("could not build the HTTP client: {0}")]
+    HttpClient(#[source] oauth2::reqwest::Error),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -26,9 +40,25 @@ pub enum PageError {
     #[error("database error: {0}")]
     Database(#[from] sqlx::Error),
     #[error(transparent)]
-    Category(#[from] ladder_core::error::UnknownCategoryKey),
+    Category(#[from] rankings_core::error::UnknownCategoryKey),
     #[error(transparent)]
-    Axis(#[from] ladder_core::error::UnknownAxisKey),
+    Axis(#[from] rankings_core::error::UnknownAxisKey),
     #[error("negative vote count: {0}")]
     NegativeCount(#[from] std::num::TryFromIntError),
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("unknown sign-in provider `{0}`")]
+pub struct UnknownProvider(pub String);
+
+#[derive(Debug, thiserror::Error)]
+pub enum AuthError {
+    #[error("provider request failed: {0}")]
+    Http(#[from] oauth2::reqwest::Error),
+    #[error("provider response was not valid JSON: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("token exchange failed: {0}")]
+    TokenExchange(String),
+    #[error("provider returned an invalid account: {0}")]
+    InvalidAccount(&'static str),
 }

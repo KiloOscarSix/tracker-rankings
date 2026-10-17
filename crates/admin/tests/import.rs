@@ -1,8 +1,8 @@
 use std::path::Path;
 
-use ladder_admin::error::ImportError;
-use ladder_admin::import::{ImportReport, import};
-use ladder_admin::seed::{self, Seed, Source};
+use rankings_admin::error::ImportError;
+use rankings_admin::import::{ImportReport, import};
+use rankings_admin::seed::{self, Seed, Source};
 use sqlx::PgPool;
 
 const EXPECTED: ImportReport =

@@ -1,4 +1,4 @@
-# Tracker Ladder
+# Tracker Rankings
 
 Community rankings of private trackers, and whether the next rung of the invite ladder is worth the climb.
 
@@ -12,8 +12,8 @@ See [`docs/PLAN.md`](docs/PLAN.md) for scope and milestones.
 
 | Path                    | Purpose                                         |
 | ----------------------- | ----------------------------------------------- |
-| `crates/core`           | `ladder-core`: pure scoring and domain logic    |
-| `crates/admin`          | `ladder-admin`: import and maintenance CLI      |
+| `crates/core`           | `rankings-core`: pure scoring and domain logic    |
+| `crates/admin`          | `rankings-admin`: import and maintenance CLI      |
 | `web`                   | Topcoat SSR site                                |
 | `migrations/`           | Postgres migrations (up/down pairs)             |
 | `data/trackerpathways/` | Vendored seed data with attribution             |
@@ -24,12 +24,16 @@ See [`docs/PLAN.md`](docs/PLAN.md) for scope and milestones.
 Requires the nightly toolchain (pinned), `topcoat` CLI 0.10.0, `sqlx-cli` 0.9, and Docker for Postgres.
 
 ```sh
-cp .env.example .env                 # point DATABASE_URL at your Postgres
+cp .env.example .env                 # set DATABASE_URL and COOKIE_KEY
 sqlx migrate run
-cargo run -p ladder-admin -- import  # idempotent; never touches votes
+cargo run -p rankings-admin -- import  # idempotent; never touches votes
 topcoat asset bundle -p web
-cargo run -p web                     # http://127.0.0.1:3000
+cargo run -p web                     # http://localhost:3000
 ```
+
+Browse via `localhost`, not `127.0.0.1`: the session cookie is always `Secure`, and browsers accept that over plain HTTP only on `localhost`.
+
+Sign-in needs a Discord and/or Reddit OAuth app. Register `${PUBLIC_BASE_URL}/auth/discord/callback` (Discord, scope `identify`) or `${PUBLIC_BASE_URL}/auth/reddit/callback` (Reddit "web app", scope `identity`), then fill the matching variables in `.env`. A provider with no credentials is hidden from `/login`.
 
 To re-vendor the seed, follow the command in `data/trackerpathways/SOURCE` and update its commit, date, checksum and counts.
 

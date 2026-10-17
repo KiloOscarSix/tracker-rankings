@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH account AS (\n               INSERT INTO accounts (provider, provider_subject, display_name, provider_created_at)\n               VALUES ($1::text::oauth_provider, $2, $3, to_timestamp($4))\n               ON CONFLICT (provider, provider_subject)\n                   DO UPDATE SET display_name = EXCLUDED.display_name\n               RETURNING id\n           ), voter AS (\n               INSERT INTO voters (kind, account_id)\n               SELECT 'account'::voter_kind, id FROM account\n               ON CONFLICT (account_id) DO NOTHING\n           )\n           SELECT id AS \"id!\" FROM account",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "accounts",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5d78674d00495c25260dacfc15062c4c0a7c3526fa711e69d0c153ed1598d863"
+}

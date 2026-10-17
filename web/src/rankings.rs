@@ -1,11 +1,11 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
-use ladder_core::axis::Axis;
-use ladder_core::category::Category;
-use ladder_core::config::ScoringConfig;
-use ladder_core::score::AxisScore;
-use ladder_core::tier::{Tier, assign_tiers};
+use rankings_core::axis::Axis;
+use rankings_core::category::Category;
+use rankings_core::config::ScoringConfig;
+use rankings_core::score::AxisScore;
+use rankings_core::tier::{Tier, assign_tiers};
 
 use crate::queries::trackers::{ListedTracker, ScoreRow};
 

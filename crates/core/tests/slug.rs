@@ -1,4 +1,4 @@
-use ladder_core::slug::slugify;
+use rankings_core::slug::slugify;
 
 #[test]
 fn slugify_lowercases_and_hyphenates_upstream_names() {

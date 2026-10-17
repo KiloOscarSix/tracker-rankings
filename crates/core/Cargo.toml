@@ -1,5 +1,5 @@
 [package]
-name = "ladder-core"
+name = "rankings-core"
 description = "Pure domain logic: categories, vote weighting, aggregation, tiers, pairwise ranking."
 version.workspace = true
 edition.workspace = true

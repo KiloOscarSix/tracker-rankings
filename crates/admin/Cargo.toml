@@ -1,5 +1,5 @@
 [package]
-name = "ladder-admin"
+name = "rankings-admin"
 description = "Import and maintenance CLI: trackerpathways seed import."
 version.workspace = true
 edition.workspace = true
@@ -14,7 +14,7 @@ workspace = true
 [dependencies]
 clap = { workspace = true }
 dotenvy = { workspace = true }
-ladder-core = { workspace = true }
+rankings-core = { workspace = true }
 serde = { workspace = true, features = ["derive", "std"] }
 serde_json = { workspace = true, features = ["std"] }
 sqlx = { workspace = true }

@@ -1,7 +1,7 @@
-use ladder_core::config::VoteWeights;
-use ladder_core::error::InvalidScore;
-use ladder_core::score::{Rating, Score, Tally, bayesian, global_mean, tally};
-use ladder_core::weight::Voter;
+use rankings_core::config::VoteWeights;
+use rankings_core::error::InvalidScore;
+use rankings_core::score::{Rating, Score, Tally, bayesian, global_mean, tally};
+use rankings_core::weight::Voter;
 
 fn close(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-12

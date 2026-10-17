@@ -1,9 +1,14 @@
+use topcoat::cookie::RouterBuilderCookieExt;
 use topcoat::router::{Router, RouterBuilder};
 use topcoat::runtime::RouterBuilderRuntimeExt;
+use topcoat::session::RouterBuilderSessionExt;
 
-use crate::{document, pages};
+use crate::auth::sessions::session_config;
+use crate::rate_limit::{auth_rate_limit, logout_rate_limit};
+use crate::{auth, document, pages};
 
-const ROUTE_GROUPS: [fn(RouterBuilder) -> RouterBuilder; 1] = [pages::routes];
+const ROUTE_GROUPS: [fn(RouterBuilder) -> RouterBuilder; 2] =
+    [pages::routes, auth::routes];
 
 #[must_use]
 pub fn router(base: RouterBuilder) -> Router {
@@ -12,6 +17,10 @@ pub fn router(base: RouterBuilder) -> Router {
     ROUTE_GROUPS
         .into_iter()
         .fold(base, |builder, group| group(builder))
+        .layer(auth_rate_limit())
+        .layer(logout_rate_limit())
+        .sessions(session_config())
         .runtime()
+        .cookies()
         .build()
 }

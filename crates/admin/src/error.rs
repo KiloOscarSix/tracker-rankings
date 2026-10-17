@@ -2,7 +2,7 @@ use std::io;
 use std::num::ParseIntError;
 use std::path::PathBuf;
 
-use ladder_core::error::UnknownCategoryToken;
+use rankings_core::error::UnknownCategoryToken;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ImportError {

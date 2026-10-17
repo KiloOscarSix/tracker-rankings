@@ -1,5 +1,5 @@
-use ladder_core::config::ScoringConfig;
-use ladder_core::error::ConfigError;
+use rankings_core::config::ScoringConfig;
+use rankings_core::error::ConfigError;
 
 #[test]
 fn default_config_is_valid() {

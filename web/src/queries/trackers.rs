@@ -1,6 +1,6 @@
-use ladder_core::axis::Axis;
-use ladder_core::category::Category;
-use ladder_core::score::AxisScore;
+use rankings_core::axis::Axis;
+use rankings_core::category::Category;
+use rankings_core::score::AxisScore;
 use sqlx::PgPool;
 
 use crate::error::PageError;

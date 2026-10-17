@@ -1,6 +1,6 @@
-use ladder_core::bradley_terry::{Matchup, fit};
-use ladder_core::config::BradleyTerryConfig;
-use ladder_core::error::PairwiseError;
+use rankings_core::bradley_terry::{Matchup, fit};
+use rankings_core::config::BradleyTerryConfig;
+use rankings_core::error::PairwiseError;
 
 #[test]
 fn recovers_known_order_and_ratios() {

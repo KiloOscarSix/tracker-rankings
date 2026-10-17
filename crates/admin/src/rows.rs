@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use ladder_core::category::Category;
-use ladder_core::slug::slugify;
+use rankings_core::category::Category;
+use rankings_core::slug::slugify;
 
 use crate::error::ImportError;
 use crate::seed::Seed;

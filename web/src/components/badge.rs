@@ -14,7 +14,6 @@ use topcoat::view::{
 ///
 /// [`Default`] is `BadgeVariant::Primary`, used when no variant is given.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[allow(dead_code)]
 pub enum BadgeVariant {
     /// The primary-filled badge for highlighted statuses.
     #[default]
@@ -30,7 +29,7 @@ pub enum BadgeVariant {
 impl BadgeVariant {
     /// Classes for the variant, including its border color. Keep border colors out
     /// of the shared base to avoid conflicting classes.
-    fn classes(self) -> StaticClass {
+    const fn classes(self) -> StaticClass {
         match self {
             Self::Primary => {
                 class!("border-transparent bg-primary text-primary-foreground")
@@ -65,7 +64,9 @@ const BASE: StaticClass = class!(
 /// }
 /// ```
 #[must_use]
-pub fn badge_variants(variant: BadgeVariant) -> Class<(StaticClass, StaticClass)> {
+pub const fn badge_variants(
+    variant: BadgeVariant,
+) -> Class<(StaticClass, StaticClass)> {
     class!(BASE, variant.classes())
 }
 

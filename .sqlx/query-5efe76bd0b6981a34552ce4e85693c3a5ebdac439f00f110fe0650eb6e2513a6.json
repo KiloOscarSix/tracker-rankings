@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH anon AS (\n               INSERT INTO anon_voters (fingerprint_hmac) VALUES ($1)\n               ON CONFLICT (fingerprint_hmac)\n                   DO UPDATE SET fingerprint_hmac = EXCLUDED.fingerprint_hmac\n               RETURNING id\n           ), voter AS (\n               INSERT INTO voters (kind, anon_id)\n               SELECT 'anon'::voter_kind, id FROM anon\n               ON CONFLICT (anon_id) DO UPDATE SET anon_id = EXCLUDED.anon_id\n               RETURNING id\n           )\n           SELECT id AS \"id!\" FROM voter",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "voters",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5efe76bd0b6981a34552ce4e85693c3a5ebdac439f00f110fe0650eb6e2513a6"
+}

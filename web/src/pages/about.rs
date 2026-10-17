@@ -1,5 +1,5 @@
-use ladder_core::axis::Axis;
-use ladder_core::tier::Tier;
+use rankings_core::axis::Axis;
+use rankings_core::tier::Tier;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::page;
@@ -129,7 +129,7 @@ pub(crate) async fn about(cx: &Cx) -> Result<impl View> {
                     "Privacy"
                 </h2>
                 <p class="text-sm">
-                    "The site sets essential cookies only. It stores no email addresses, IP addresses or user agents. Anonymous voters are identified only by a keyed HMAC."
+                    "The site sets essential cookies only: __Host-session once you sign in, oauth_state for the ten minutes a sign-in takes, and anon_id the first time you vote without an account. It stores no email addresses, IP addresses or user agents. An anonymous voter is identified only by a keyed HMAC of that cookie, your network prefix (/24 or /48) and your user agent, so it cannot be reversed."
                 </p>
             </section>
         </main>

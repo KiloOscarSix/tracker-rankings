@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
-use ladder_core::category::Category;
-use ladder_core::error::{UnknownCategoryKey, UnknownCategoryToken};
+use rankings_core::category::Category;
+use rankings_core::error::{UnknownCategoryKey, UnknownCategoryToken};
 
 fn upstream_tokens() -> Option<BTreeSet<String>> {
     let value = serde_json::from_str::<serde_json::Value>(include_str!(

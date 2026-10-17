@@ -1,14 +1,16 @@
 use topcoat::Result;
 use topcoat::asset::{Asset, asset};
+use topcoat::context::Cx;
 use topcoat::router::error::NotFoundError;
 use topcoat::router::{Slot, StatusCode, layout};
 use topcoat::view::{Child, View, component, error_boundary, view};
 
+use crate::auth::sessions::current_account;
 use crate::pages::not_found::not_found_page;
 
 pub const STYLESHEET: Asset = asset!(concat!(env!("OUT_DIR"), "/tailwind.css"));
 
-pub const SITE_NAME: &str = "Tracker Ladder";
+pub const SITE_NAME: &str = "Tracker Rankings";
 
 #[layout("/")]
 pub(crate) async fn root_layout(slot: Slot<'_>) -> Result<impl View> {
@@ -48,9 +50,12 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                         class="mx-auto flex max-w-6xl items-baseline justify-between px-4 py-3"
                     >
                         <a href="/" class="font-semibold tracking-tight">(SITE_NAME)</a>
-                        <nav class="flex gap-4 text-sm text-muted-foreground">
+                        <nav
+                            class="flex items-baseline gap-4 text-sm text-muted-foreground"
+                        >
                             <a href="/" class="hover:text-foreground">"Rankings"</a>
                             <a href="/about" class="hover:text-foreground">"About"</a>
+                            account_nav()
                         </nav>
                     </div>
                 </header>
@@ -71,5 +76,21 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                 </footer>
             </body>
         </html>
+    })
+}
+
+#[component]
+async fn account_nav(cx: &Cx) -> Result<impl View> {
+    let account = current_account(cx).await?;
+
+    Ok(view! {
+        if let Some(account) = account {
+            <span class="text-foreground">(account.display_name)</span>
+            <form method="post" action="/logout">
+                <button type="submit" class="hover:text-foreground">"Sign out"</button>
+            </form>
+        } else {
+            <a href="/login" class="hover:text-foreground">"Sign in"</a>
+        }
     })
 }

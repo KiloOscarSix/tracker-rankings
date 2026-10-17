@@ -1,5 +1,5 @@
-use ladder_core::score::AxisScore;
-use ladder_core::tier::Tier;
+use rankings_core::score::AxisScore;
+use rankings_core::tier::Tier;
 use topcoat::Result;
 use topcoat::view::{View, attributes, component, view};
 
