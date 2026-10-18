@@ -10,6 +10,10 @@ pub struct UnknownCategoryKey(pub String);
 #[error("{0:?} is not a rating axis")]
 pub struct UnknownAxisKey(pub String);
 
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("{0:?} is not a membership status")]
+pub struct UnknownMembershipStatus(pub String);
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[error("rating score {0} is outside 1..=5")]
 pub struct InvalidScore(pub i16);

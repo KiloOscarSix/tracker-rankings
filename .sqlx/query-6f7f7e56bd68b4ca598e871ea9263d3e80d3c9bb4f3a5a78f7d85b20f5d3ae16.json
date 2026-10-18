@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM memberships WHERE voter_id = $1 AND tracker_id = $2\n           ) AS \"member!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "member!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6f7f7e56bd68b4ca598e871ea9263d3e80d3c9bb4f3a5a78f7d85b20f5d3ae16"
+}

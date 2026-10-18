@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.status::text AS \"status!\", r.axis::text AS \"axis?\",\n                  r.score AS \"score?\"\n           FROM memberships m\n           LEFT JOIN ratings r\n               ON r.voter_id = m.voter_id AND r.tracker_id = m.tracker_id\n           WHERE m.voter_id = $1 AND m.tracker_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "axis?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "score?",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "ratings",
+            "name": "score"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      true
+    ]
+  },
+  "hash": "ca3f67fd0a45704bc39f34fdc4959d91a4428a8f00b2f200461d5063cc8aa17c"
+}

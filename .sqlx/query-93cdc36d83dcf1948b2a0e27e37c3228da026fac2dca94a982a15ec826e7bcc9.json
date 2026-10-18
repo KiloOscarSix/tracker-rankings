@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM pairwise_votes WHERE voter_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "93cdc36d83dcf1948b2a0e27e37c3228da026fac2dca94a982a15ec826e7bcc9"
+}

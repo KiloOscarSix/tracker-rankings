@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO voters (kind, account_id) VALUES ('account', $1)\n               ON CONFLICT (account_id)\n                   DO UPDATE SET account_id = EXCLUDED.account_id\n               RETURNING id AS \"id!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "voters",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "75dcade83afc73ba1514f8a215c81a0e69e8a82c93bb931d6b42179ab8bdd907"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.vote_count\n         FROM tracker_scores s\n         JOIN trackers t ON t.id = s.tracker_id\n         WHERE t.slug = 'aither' AND s.axis = 'overall'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "vote_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "vote_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a8ce0f8eacf0a10eacef986dfceec40663c3cf0ab29e22ac66cd4de666bf62a2"
+}

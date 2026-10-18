@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO ratings (voter_id, tracker_id, axis, score)\n         SELECT $1::bigint, $2::integer, u.axis::rating_axis, u.score\n         FROM UNNEST($3::text[], $4::smallint[]) AS u(axis, score)\n         ON CONFLICT (voter_id, tracker_id, axis)\n             DO UPDATE SET score = EXCLUDED.score, updated_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4",
+        "TextArray",
+        "Int2Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4dccd815edcb2bbde6e02569237bedc2a21aec4db30eddf7ed4cf19e666fd3f0"
+}

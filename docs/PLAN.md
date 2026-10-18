@@ -142,15 +142,27 @@ One milestone per session and per small set of commits. Never commit without the
   - Rate limits on the write routes.
   - Origin policy (CSRF).
   - **Done when:** tests use fake OAuth providers behind a trait. The real Discord app gets a manual check with the user's credentials; the Reddit check is the last milestone below.
-- [ ] **M6: Voting.**
+- [x] **M6: Voting.**
+  - Deviation: the score refresh lives in `rankings-admin` (`recompute::refresh_scores`), which `web` now depends on; it runs every minute and writes rows only for rated (tracker, axis) pairs. Ratings may cover a subset of axes. Vote writes sit under `/vote/{slug}/…` and `/me/delete` with a 30/min per-IP limit. `void-voter` deletes a voter's votes but keeps its identity row.
   - Membership declaration, then 1–5 ratings on the five axes, with re-voting overwriting the previous vote.
   - A background refresh of `tracker_scores`, plus `admin recompute` and `admin void-voter`.
   - `/me`: memberships, my votes and "delete my data".
   - **Done when:** tests show an anonymous vote carries 0.7 weight, re-voting overwrites, and deletion cascades.
+- [ ] **Event-driven score refresh.**
+  - M6 recomputes `tracker_scores` every minute, which is dead work while the site has no traffic. Replace the timer with a refresh that runs only when something changed.
+  - Every write that changes a score signals the refresher: rating and membership changes, "delete my data". `admin recompute` and `admin void-voter` keep refreshing directly.
+  - A rest period handles spikes: the first signal arms a short delay, every signal inside it is absorbed, then one recompute covers them all. A cap on the total wait keeps a steady stream of votes from postponing the refresh forever.
+  - Account age changes a vote's weight with no write (0.8 becomes 1.0 at 30 days), so the refresher also wakes once when the youngest rating account crosses `young_account_days`.
+  - Recompute once at startup. M7's `pairwise_scores` refresh uses the same trigger.
+  - **Done when:** tests show an idle server never recomputes, a burst of votes produces one recompute after the rest period, and a young account's vote reaches full weight without a new write.
 - [ ] **M7: Pairwise.**
   - `/compare` shows matchups drawn from the voter's memberships or from one category.
   - The Bradley–Terry ranking is refreshed into `pairwise_scores`.
   - **Done when:** a vote is recorded and the ranking page renders from the fitted scores.
+- [ ] **Confirm destructive actions.**
+  - "Delete my data" on `/me` and "Not a member (removes my ratings)" on `/t/{slug}` act on the first click today (M6).
+  - Add a confirmation step to each, using the registry `alert_dialog` (see `docs/topcoat/ui.md`), with a plain no-JS fallback. The server refuses a request that lacks the confirmation field, so a stray POST changes nothing.
+  - **Done when:** tests show both POSTs without confirmation leave the data untouched, and with confirmation behave as in M6.
 - [ ] **M8: Deployment.**
   - `docker/Dockerfile.web` (cargo-chef, Tailwind with checksum, `topcoat asset bundle --release`, non-root).
   - `compose.yaml`: postgres:18 with a healthcheck, `${X:?}` required env vars, port bound to 127.0.0.1.

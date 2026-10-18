@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
@@ -10,7 +11,16 @@ use rankings_core::config::ScoringConfig;
 use sqlx::PgPool;
 use topcoat::asset::{AssetBundle, RouterBuilderAssetExt};
 use topcoat::router::request::Request;
-use topcoat::router::{HeaderMap, Router, RouterBuilder, StatusCode, header};
+use topcoat::router::{
+    Body,
+    HeaderMap,
+    Method,
+    RemoteAddr,
+    Router,
+    RouterBuilder,
+    StatusCode,
+    header,
+};
 use web::auth::oauth::{
     ExchangeFuture,
     OAuthClient,
@@ -21,7 +31,7 @@ use web::auth::provider::Provider;
 use web::config::CookieKey;
 use web::document::STYLESHEET;
 use web::error::AuthError;
-use web::rate_limit::{AUTH_QUOTA, RateLimiters};
+use web::rate_limit::{AUTH_QUOTA, RateLimiters, VOTE_QUOTA};
 use web::router;
 
 const STYLESHEET_FILE: &str = "tailwind-0123456789abcdef.css";
@@ -31,6 +41,7 @@ const RUNTIME_BODY: &str = "export {};";
 
 pub(crate) const GOOD_CODE: &str = "good-code";
 pub(crate) const CREATED_AT: f64 = 1_600_000_000.0;
+pub(crate) const CLIENT: &str = "203.0.113.5:4000";
 
 pub(crate) type TestResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
@@ -134,7 +145,7 @@ pub(crate) async fn app_with(
         .app_context(ScoringConfig::default())
         .app_context(OAuthClients::new(clients))
         .app_context(cookie_key()?)
-        .app_context(Arc::new(RateLimiters::new(auth_quota)));
+        .app_context(Arc::new(RateLimiters::new(auth_quota, VOTE_QUOTA)));
     Ok(router(extra(base)))
 }
 
@@ -168,4 +179,56 @@ pub(crate) fn set_cookie(reply: &Reply, name: &str) -> Option<String> {
 
 pub(crate) fn location(reply: &Reply) -> Option<&str> {
     reply.headers.get(header::LOCATION).and_then(|value| value.to_str().ok())
+}
+
+pub(crate) fn request(
+    method: Method,
+    uri: &str,
+    headers: &[(&str, &str)],
+    peer: &str,
+) -> TestResult<Request> {
+    let mut builder = Request::builder()
+        .method(method)
+        .uri(uri)
+        .extension(RemoteAddr(peer.parse::<SocketAddr>()?));
+    for (name, value) in headers {
+        builder = builder.header(*name, *value);
+    }
+    Ok(builder.body(Body::empty())?)
+}
+
+pub(crate) fn form_request(
+    uri: &str,
+    form: &str,
+    headers: &[(&str, &str)],
+    peer: &str,
+) -> TestResult<Request> {
+    let mut builder = Request::builder()
+        .method(Method::POST)
+        .uri(uri)
+        .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
+        .extension(RemoteAddr(peer.parse::<SocketAddr>()?));
+    for (name, value) in headers {
+        builder = builder.header(*name, *value);
+    }
+    Ok(builder.body(Body::from(form.to_owned()))?)
+}
+
+pub(crate) async fn begin(router: &Router, provider: &str) -> TestResult<String> {
+    let uri = format!("/auth/{provider}");
+    let reply = send(router, request(Method::POST, &uri, &[], CLIENT)?).await?;
+    assert_eq!(reply.status, StatusCode::SEE_OTHER);
+    Ok(set_cookie(&reply, "oauth_state").ok_or("no oauth_state cookie")?)
+}
+
+pub(crate) async fn sign_in(router: &Router, provider: &str) -> TestResult<String> {
+    let state = begin(router, provider).await?;
+    let uri = format!("/auth/{provider}/callback?code={GOOD_CODE}&state={state}");
+    let cookie = format!("oauth_state={state}");
+    let reply =
+        send(router, request(Method::GET, &uri, &[("cookie", &cookie)], CLIENT)?)
+            .await?;
+    assert_eq!(reply.status, StatusCode::SEE_OTHER);
+    assert_eq!(location(&reply), Some("/"));
+    Ok(set_cookie(&reply, "__Host-session").ok_or("no session cookie")?)
 }

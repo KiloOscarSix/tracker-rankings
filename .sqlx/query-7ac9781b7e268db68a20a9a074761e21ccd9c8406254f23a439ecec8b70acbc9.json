@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT v.id\n         FROM voters v\n         JOIN anon_voters a ON a.id = v.anon_id\n         WHERE a.fingerprint_hmac = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "voters",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7ac9781b7e268db68a20a9a074761e21ccd9c8406254f23a439ecec8b70acbc9"
+}

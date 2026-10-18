@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM ratings WHERE voter_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "644d4b8259fdc29691a5374749c39455fa76be8ae5dae90d8af0dd3b5e34e7ab"
+}

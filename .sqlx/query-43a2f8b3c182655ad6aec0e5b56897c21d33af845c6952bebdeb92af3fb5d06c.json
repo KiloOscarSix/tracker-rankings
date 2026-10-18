@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM memberships WHERE voter_id = $1 AND tracker_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "43a2f8b3c182655ad6aec0e5b56897c21d33af845c6952bebdeb92af3fb5d06c"
+}

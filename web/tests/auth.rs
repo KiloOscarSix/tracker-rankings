@@ -1,69 +1,35 @@
-use std::net::SocketAddr;
 use std::num::NonZeroU32;
 
 use governor::Quota;
 use sqlx::PgPool;
 use topcoat::context::Cx;
-use topcoat::router::request::Request;
-use topcoat::router::{Body, Method, RemoteAddr, Router, StatusCode, header, route};
+use topcoat::router::{Method, Router, StatusCode, header, route};
 use web::auth::anon::anon_voter;
 use web::auth::sessions::prune_expired_sessions;
 use web::rate_limit::AUTH_QUOTA;
 
+#[expect(dead_code, reason = "each test binary uses a subset of the shared helpers")]
 mod common;
 
 use common::{
+    CLIENT,
     CREATED_AT,
     GOOD_CODE,
     TestResult,
     app,
     app_with,
     location,
+    request,
     send,
     set_cookie,
+    sign_in,
 };
 
-const CLIENT: &str = "203.0.113.5:4000";
 const FAILED: &str = "/login?error=auth_failed";
 
 #[route(POST "/test/anon")]
 async fn anon_probe(cx: &Cx) -> topcoat::Result<String> {
     Ok(anon_voter(cx).await?.to_string())
-}
-
-fn request(
-    method: Method,
-    uri: &str,
-    headers: &[(&str, &str)],
-    peer: &str,
-) -> TestResult<Request> {
-    let mut builder = Request::builder()
-        .method(method)
-        .uri(uri)
-        .extension(RemoteAddr(peer.parse::<SocketAddr>()?));
-    for (name, value) in headers {
-        builder = builder.header(*name, *value);
-    }
-    Ok(builder.body(Body::empty())?)
-}
-
-async fn begin(router: &Router, provider: &str) -> TestResult<String> {
-    let uri = format!("/auth/{provider}");
-    let reply = send(router, request(Method::POST, &uri, &[], CLIENT)?).await?;
-    assert_eq!(reply.status, StatusCode::SEE_OTHER);
-    Ok(set_cookie(&reply, "oauth_state").ok_or("no oauth_state cookie")?)
-}
-
-async fn sign_in(router: &Router, provider: &str) -> TestResult<String> {
-    let state = begin(router, provider).await?;
-    let uri = format!("/auth/{provider}/callback?code={GOOD_CODE}&state={state}");
-    let cookie = format!("oauth_state={state}");
-    let reply =
-        send(router, request(Method::GET, &uri, &[("cookie", &cookie)], CLIENT)?)
-            .await?;
-    assert_eq!(reply.status, StatusCode::SEE_OTHER);
-    assert_eq!(location(&reply), Some("/"));
-    Ok(set_cookie(&reply, "__Host-session").ok_or("no session cookie")?)
 }
 
 async fn get_with_session(
@@ -95,7 +61,7 @@ async fn count_sessions(pool: &PgPool) -> TestResult<i64> {
 async fn browsing_sets_no_cookies(pool: PgPool) -> TestResult<()> {
     let router = app(pool, false).await?;
 
-    for path in ["/", "/about", "/login"] {
+    for path in ["/", "/about", "/login", "/me"] {
         let reply = send(&router, request(Method::GET, path, &[], CLIENT)?).await?;
         assert_eq!(reply.status, StatusCode::OK, "{path}");
         assert!(reply.headers.get(header::SET_COOKIE).is_none(), "{path}");

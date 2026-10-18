@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.tracker_id, r.axis::text AS \"axis!\", r.score,\n                  v.kind::text AS \"kind!\",\n                  floor(\n                      extract(epoch FROM now() - a.provider_created_at) / 86400\n                  )::integer AS \"age_days?\"\n           FROM ratings r\n           JOIN voters v ON v.id = r.voter_id\n           JOIN trackers t ON t.id = r.tracker_id AND t.listed\n           LEFT JOIN accounts a ON a.id = v.account_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tracker_id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ratings",
+            "name": "tracker_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "axis!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "score",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "ratings",
+            "name": "score"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "age_days?",
+        "type_info": "Int4",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "64cda737da0adaaca37f554802a0ce31fb699e6afaffedaa4af995e389978f49"
+}

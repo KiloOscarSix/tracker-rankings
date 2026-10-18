@@ -1,4 +1,4 @@
-> Copied from `~/Documents/Viridian/zayden/docs/topcoat/`. `Web:` citations point at files in that repo, not this one; use them as worked examples.
+> Copied from `~/Documents/Viridian/zayden/docs/topcoat/`. API facts (signatures, status codes, observed behaviour) hold for any project on the pinned version. Everything the files say about `web`, "this repository" or "the app" (`Web:` citations, installed state, build and deploy details, "impact on this repo" columns) describes zayden, not this project: use it as a worked example. This project's own Topcoat wiring is in [This repository](#this-repository) below and wins where the two differ.
 
 # Topcoat reference
 
@@ -38,20 +38,36 @@ An API that is not in (1) and has not compiled in (2) is treated as nonexistent.
 3. Re-check every entry in `core.md`, `ui.md` and `tooling.md` that the diff touches, recompile its example, and update its source citation.
 4. Update the `Verified against` line in every file, then run `cargo test -p web --test topcoat_reference`.
 
+## This repository
+
+Checked against the files on 2026-10-21. Update this section when the wiring changes.
+
+| Area | State | Files |
+|---|---|---|
+| Features | runtime: `asset`, `compression`, `cookie`, `icon-iconify`, `router`, `runtime`, `serve`, `session`, `view`; build: `icon-iconify`, `tailwind`, `ui` | `web/Cargo.toml` |
+| Build script | Tailwind 4.3.2 from `web/styles.css` (checksum on Linux x86-64, `TAILWIND_CLI` override); Iconify set staged from the committed `web/icons/lucide.json` (`cache_dir("icons")`, ui.md "Icons" option B), so the build fetches no icons | `web/build.rs` |
+| Stylesheet | `web/styles.css` is the `neutral` theme and the only Tailwind input: `@import "tailwindcss" source(none)`, `@source "./src/**/*.rs"`, then one `@source not` line per unlinked component | `web/styles.css` |
+| Components | All 31 registry components are on disk; `web/src/components.rs` (no `mod.rs`) declares the linked ones under one module-level `#![expect(unreachable_pub, ...)]`. Linked: `badge`, `button`, `label`, `radio_group`, `table`, plus the app's own `score`. `select.rs` is the registry file; there is no app `select` | `web/src/components.rs`, `web/components.toml` |
+| Sessions | `topcoat::session` (core.md section 9): `__Host-session` cookie, `sessions.token_hash` stores the `TokenHash` | `web/src/auth/sessions.rs`, `web/src/router.rs` |
+| Forms | `Form<T>` with `serde::Deserialize` structs; POST routes answer `see_other` | `web/src/votes.rs` |
+| Layers | Path-scoped `LayerFn` rate limits on `/auth`, `/logout`, `/vote`, `/me/delete` | `web/src/rate_limit.rs` |
+| Tests | Router tests with a stand-in asset bundle (core.md section 16.2) | `web/tests/common/mod.rs` |
+
+Gotchas found here:
+
+- `class!` concatenates classes and does not merge Tailwind conflicts. A component that sets a base layout class (`radio_group` sets `grid gap-3`) keeps it when you pass `class="flex ..."`, and the stylesheet order decides which wins (`grid` did). Pass classes that compose with the base instead: `grid-flow-col auto-cols-max gap-x-4` for a horizontal `radio_group` (`web/src/pages/tracker.rs`).
+- A build without `DATABASE_URL` in the environment lets the `sqlx` macros read `.env`; use `SQLX_OFFLINE=true` for `topcoat asset bundle -p web` when `.env` points at a database you cannot reach.
+
 ## Updating vendored UI components
 
-The files in `web/src/components/` that `web/components.toml` lists come from `topcoat-ui-registry`. The wired ones carry local edits (lint header, local icons, app tokens), so `topcoat ui add <name> --overwrite` would discard them.
+The files in `web/src/components/` that `web/components.toml` lists come from `topcoat-ui-registry`. Every installed file carries lint fix-ups and `topcoat fmt` formatting (ui.md "Using it in this app", step 3), so `topcoat ui add <name> --overwrite` would discard them.
 
-1. Diff each wired file against the registry source of the new version, `~/.cargo/registry/src/*/topcoat-ui-registry-<version>/src/components/<name>.rs`, and note the local edits.
+1. Diff each file against the registry source of the new version, `~/.cargo/registry/src/*/topcoat-ui-registry-<version>/src/components/<name>.rs`, and note the local edits.
 2. Run `topcoat ui add <name> --overwrite`, then re-apply the local edits.
-3. Never run `topcoat ui remove select` or `topcoat ui add select --overwrite`: the CLI would replace the app's own `select.rs`. Rename the app module first, as was done for `shape_skeleton`.
 
-Parked components (listed in the `@source not` line of `web/styles.css`) stay byte-identical to upstream and can be overwritten freely.
+## Wiring an unlinked component
 
-## Wiring a parked component
-
-1. Add `pub mod <name>;` to `web/src/components/mod.rs`.
-2. Add the `#![expect(unreachable_pub, reason = "...")]` header used by the other wired components.
-3. Replace each `iconify_icon!(...)` with a constant from `web/src/components/ui_icons.rs`, adding the constant there if it is missing. The `icon-iconify` feature stays off.
-4. Remove the component from the `@source not` line in `web/styles.css`.
-5. Map any registry token it uses to the `web/style` tokens.
+1. Add `pub mod <name>;` to `web/src/components.rs`, plus any registry siblings it imports through `super::` (ui.md "Component index").
+2. Delete its `@source not "./src/components/<name>.rs";` line from `web/styles.css`.
+3. Keep its `iconify_icon!(...)` calls: they read the vendored `web/icons/lucide.json`, a trimmed set holding the seven icons the registry uses. An icon outside it is a compile error; add its body to the file (ui.md "Icons", option B).
+4. Fix any lints the newly compiled file raises without silencing them (ui.md "Using it in this app", step 3).

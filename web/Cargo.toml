@@ -15,6 +15,7 @@ base64 = { workspace = true, features = ["alloc"] }
 dotenvy = { workspace = true }
 governor = { workspace = true }
 hmac = { workspace = true }
+rankings-admin = { workspace = true }
 rankings-core = { workspace = true }
 oauth2 = { workspace = true }
 rustls = { workspace = true, features = ["aws-lc-rs"] }
@@ -40,7 +41,6 @@ tracing-subscriber = { workspace = true, features = ["ansi", "fmt"] }
 
 [dev-dependencies]
 http-body-util = { workspace = true }
-rankings-admin = { workspace = true }
 sqlx = { workspace = true, features = ["migrate"] }
 
 [build-dependencies]

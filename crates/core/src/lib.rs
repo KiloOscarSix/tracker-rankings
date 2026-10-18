@@ -1,8 +1,10 @@
+pub mod aggregate;
 pub mod axis;
 pub mod bradley_terry;
 pub mod category;
 pub mod config;
 pub mod error;
+pub mod membership;
 pub mod score;
 pub mod slug;
 pub mod tier;

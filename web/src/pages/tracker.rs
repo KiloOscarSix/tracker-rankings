@@ -1,10 +1,17 @@
 use rankings_core::axis::Axis;
+use rankings_core::membership::MembershipStatus;
+use rankings_core::score::Score;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::error::RouterErrorExt;
 use topcoat::router::{page, path_param};
 use topcoat::view::{View, attributes, view};
 
+use crate::auth::sessions::current_account;
+use crate::auth::voter::current_voter;
+use crate::components::button::button;
+use crate::components::label::label;
+use crate::components::radio_group::{radio_group, radio_group_item};
 use crate::components::score::score_cell;
 use crate::components::table::{
     table,
@@ -14,13 +21,15 @@ use crate::components::table::{
     table_header,
     table_row,
 };
-use crate::context::db;
+use crate::context::{db, scoring};
 use crate::queries::trackers::{
     incoming_routes,
     outgoing_routes,
     tracker_by_slug,
     tracker_scores,
 };
+use crate::queries::votes::voter_tracker;
+use crate::rankings::axis_index;
 
 pub const RECRUITMENTS_WIKI: &str =
     "https://www.reddit.com/r/TrackersInfo/wiki/official_recruitments/";
@@ -69,6 +78,47 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
         .collect();
     let no_scores = scores.is_empty();
 
+    let voter = current_voter(cx).await?;
+    let mine = match voter {
+        Some(v) if detail.listed => voter_tracker(pool, v, detail.id).await?,
+        _ => None,
+    };
+    let signed_in = current_account(cx).await?.is_some();
+    let anonymous_weight = scoring(cx)?.weights.anonymous;
+
+    let membership_action = format!("/vote/{slug}/membership");
+    let ratings_action = format!("/vote/{slug}/ratings");
+    let my_status = mine.as_ref().map(|m| m.status);
+    let is_member = my_status.is_some();
+    let status_options: Vec<(&'static str, &'static str, bool)> =
+        MembershipStatus::ALL
+            .into_iter()
+            .map(|status| (status.key(), status.label(), my_status == Some(status)))
+            .collect();
+    let rating_rows: Vec<(&'static str, &'static str, Option<u8>)> =
+        mine.as_ref().map_or_else(Vec::new, |m| {
+            Axis::ALL
+                .into_iter()
+                .map(|axis| {
+                    let current = m
+                        .ratings
+                        .get(axis_index(axis))
+                        .copied()
+                        .flatten()
+                        .map(Score::get);
+                    (axis.key(), axis.label(), current)
+                })
+                .collect()
+        });
+    let vote_note = if signed_in {
+        "Community scores refresh every minute.".to_owned()
+    } else {
+        format!(
+            "Anonymous votes count {anonymous_weight}\u{d7}; sign in for full weight. \
+             Community scores refresh every minute."
+        )
+    };
+
     let name = detail.name;
     let abbr = detail.abbr;
     let listed = detail.listed;
@@ -114,9 +164,9 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
                             )
                         )
                         table_body(
-                            for (label, score) in axis_scores {
+                            for (axis_label, score) in axis_scores {
                                 table_row(
-                                    table_cell((label))
+                                    table_cell((axis_label))
                                     table_cell(score_cell(score: score))
                                 )
                             }
@@ -124,6 +174,102 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
                     )
                 }
             </section>
+
+            if listed {
+                <section id="vote" class="mt-8">
+                    <h2
+                        class="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                        "Your vote"
+                    </h2>
+                    <form
+                        method="post"
+                        action=(membership_action)
+                        class="flex flex-wrap items-center gap-4"
+                    >
+                        radio_group(
+                            attrs: attributes! { aria-label="Membership" class="sm:grid-flow-col sm:auto-cols-max sm:gap-x-4" },
+                            for (key, text, checked) in status_options {
+                                <div class="flex items-center gap-2">
+                                    radio_group_item(
+                                        attrs: attributes! {
+                                            id=(format!("membership-{key}"))
+                                            name="status"
+                                            value=(key)
+                                            checked=(checked)
+                                        }
+                                    )
+                                    label(
+                                        attrs: attributes! { for=(format!("membership-{key}")) },
+                                        (text)
+                                    )
+                                </div>
+                            }
+                            if is_member {
+                                <div class="flex items-center gap-2">
+                                    radio_group_item(
+                                        attrs: attributes! {
+                                            id="membership-none"
+                                            name="status"
+                                            value="none"
+                                        }
+                                    )
+                                    label(
+                                        attrs: attributes! { for="membership-none" },
+                                        "Not a member (removes my ratings)"
+                                    )
+                                </div>
+                            }
+                        )
+                        button(
+                            attrs: attributes! { type="submit" },
+                            "Save membership"
+                        )
+                    </form>
+                    if is_member {
+                        <form method="post" action=(ratings_action) class="mt-4">
+                            for (key, text, current) in rating_rows {
+                                <div class="flex flex-wrap items-center gap-4 py-1">
+                                    <span id=(format!("axis-{key}")) class="w-48 text-sm">
+                                        (text)
+                                    </span>
+                                    radio_group(
+                                        attrs: attributes! {
+                                            aria-labelledby=(format!("axis-{key}"))
+                                            class="grid-flow-col auto-cols-max gap-x-4"
+                                        },
+                                        for n in 1..=5_u8 {
+                                            <div class="flex items-center gap-1.5">
+                                                radio_group_item(
+                                                    attrs: attributes! {
+                                                        id=(format!("rate-{key}-{n}"))
+                                                        name=(key)
+                                                        value=(n.to_string())
+                                                        checked=(current == Some(n))
+                                                    }
+                                                )
+                                                label(
+                                                    attrs: attributes! { for=(format!("rate-{key}-{n}")) },
+                                                    (n.to_string())
+                                                )
+                                            </div>
+                                        }
+                                    )
+                                </div>
+                            }
+                            button(
+                                attrs: attributes! { type="submit" class="mt-3" },
+                                "Save ratings"
+                            )
+                        </form>
+                    } else {
+                        <p class="mt-4 text-sm text-muted-foreground">
+                            "Say whether you are or were a member to rate this tracker."
+                        </p>
+                    }
+                    <p class="mt-3 text-xs text-muted-foreground">(vote_note)</p>
+                </section>
+            }
 
             <section id="invite-rank" class="mt-8">
                 <h2

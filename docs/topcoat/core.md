@@ -1094,7 +1094,7 @@ Source: `topcoat-0.10.0/docs/cookie.md`, `topcoat-cookie-0.10.0/src/lib.rs:319,3
 
 ## 9. Sessions
 
-Status: VERIFIED for `start`, `token_hash`, `refresh`, `rotate`, `stop` (compiled and observed); a custom `TokenStore` is not compiled. Features: `session` (plus `cookie` and `router`). **`web` does not use `topcoat::session`.**
+Status: VERIFIED for `start`, `token_hash`, `refresh`, `rotate`, `stop` (compiled and observed); a custom `TokenStore` is not compiled. Features: `session` (plus `cookie` and `router`). zayden's `web` does not use `topcoat::session`; this project does (`web/src/auth/sessions.rs`, see README "This repository").
 
 ```rust
 Router::builder().cookies().sessions(SessionConfig::default()).build()
@@ -1111,7 +1111,7 @@ Observed `Set-Cookie` from `session::start`: `__Host-session=<44 chars URL-safe 
 
 What the module is: a token transport and a lifecycle API. It mints a 32-byte random token, sends it in a hardened cookie, and hands the application the token's SHA-256 hash (`TokenHash`) to store; `session::token_hash(cx)` returns the hash of the token the request presented; `stop`, `refresh` (sliding expiry) and `rotate` complete the lifecycle. Observed: with no cookie `token_hash`, `refresh`, `rotate` and `stop` all return `None`; with the cookie sent back all four return `Some`, and `stop` queues `__Host-session=; ...; Max-Age=0`. The application owns the table.
 
-Why the app avoids it, from the current schema and code:
+Why zayden's `web` avoids it, from its schema and code (none of this applies here):
 
 - `web` keeps the existing browser cookie `session` and the existing table `web_sessions(token TEXT PRIMARY KEY, discord_user_id, discord_access_token, expires_at)` (`migrations/0002_v2_schema.up.sql:113-119`), which stores the 64-hex token itself, generated in `web/src/auth/login.rs:122-126`. `topcoat::session` uses `__Host-session`, `Secure` and a base64 32-byte token, and expects the stored key to be the SHA-256 of that token.
 - Adopting it means a migration (hash the key column or add one), a new cookie name, and signing every user out once.

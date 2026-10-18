@@ -10,6 +10,7 @@ pub mod reddit;
 pub mod routes;
 pub mod sessions;
 mod state;
+pub mod voter;
 
 #[must_use]
 pub fn routes(base: RouterBuilder) -> RouterBuilder {

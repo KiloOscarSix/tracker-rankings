@@ -2,6 +2,7 @@ use topcoat::router::RouterBuilder;
 
 pub mod about;
 pub mod login;
+pub mod me;
 pub mod not_found;
 pub mod rankings;
 pub mod tracker;
@@ -12,5 +13,6 @@ pub fn routes(base: RouterBuilder) -> RouterBuilder {
         .page(tracker::tracker)
         .page(about::about)
         .page(login::login)
+        .page(me::me)
         .page(not_found::not_found)
 }

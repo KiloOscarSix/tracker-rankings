@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM anon_voters\n         WHERE id = (SELECT anon_id FROM voters WHERE id = $1 AND kind = 'anon')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f9be57dd7438fc6705a6edffedc149a8462a1bb09f05a4b2075cb0106abe8f0e"
+}

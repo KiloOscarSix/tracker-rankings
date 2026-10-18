@@ -131,6 +131,11 @@ pub(crate) async fn about(cx: &Cx) -> Result<impl View> {
                 <p class="text-sm">
                     "The site sets essential cookies only: __Host-session once you sign in, oauth_state for the ten minutes a sign-in takes, and anon_id the first time you vote without an account. It stores no email addresses, IP addresses or user agents. An anonymous voter is identified only by a keyed HMAC of that cookie, your network prefix (/24 or /48) and your user agent, so it cannot be reversed."
                 </p>
+                <p class="mt-3 text-sm">
+                    "You can review or delete everything you have voted on from "
+                    <a href="/me" class="underline">"My votes"</a>
+                    "."
+                </p>
             </section>
         </main>
     })

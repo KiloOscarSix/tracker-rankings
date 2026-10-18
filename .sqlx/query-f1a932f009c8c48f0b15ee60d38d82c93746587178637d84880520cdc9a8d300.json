@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pairwise_votes (voter_id, winner_id, loser_id)\n         SELECT v.id, w.id, l.id\n         FROM voters v, trackers w, trackers l\n         WHERE v.kind = 'account' AND w.slug = 'aither' AND l.slug = 'anthelion'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "f1a932f009c8c48f0b15ee60d38d82c93746587178637d84880520cdc9a8d300"
+}

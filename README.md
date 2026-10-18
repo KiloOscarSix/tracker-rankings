@@ -31,6 +31,13 @@ topcoat asset bundle -p web
 cargo run -p web                     # http://localhost:3000
 ```
 
+The web server recomputes `tracker_scores` every minute. Maintenance:
+
+```sh
+cargo run -p rankings-admin -- recompute             # recompute tracker_scores now
+cargo run -p rankings-admin -- void-voter <voter-id> # delete one voter's votes, then recompute
+```
+
 Browse via `localhost`, not `127.0.0.1`: the session cookie is always `Secure`, and browsers accept that over plain HTTP only on `localhost`.
 
 Sign-in needs a Discord and/or Reddit OAuth app. Register `${PUBLIC_BASE_URL}/auth/discord/callback` (Discord, scope `identify`) or `${PUBLIC_BASE_URL}/auth/reddit/callback` (Reddit "web app", scope `identity`), then fill the matching variables in `.env`. A provider with no credentials is hidden from `/login`.

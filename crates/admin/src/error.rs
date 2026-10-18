@@ -1,8 +1,8 @@
 use std::io;
-use std::num::ParseIntError;
+use std::num::{ParseIntError, TryFromIntError};
 use std::path::PathBuf;
 
-use rankings_core::error::UnknownCategoryToken;
+use rankings_core::error::{InvalidScore, UnknownAxisKey, UnknownCategoryToken};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ImportError {
@@ -37,6 +37,40 @@ pub enum ImportError {
     SlugCollision { slug: String, first: String, second: String },
     #[error("upserted {upserted} of {expected} routes; some endpoints are missing")]
     UnresolvedRoutes { expected: u64, upserted: u64 },
+    #[error("database error: {0}")]
+    Db(#[from] sqlx::Error),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum RecomputeError {
+    #[error("database error: {0}")]
+    Db(#[from] sqlx::Error),
+    #[error(transparent)]
+    Axis(#[from] UnknownAxisKey),
+    #[error(transparent)]
+    Score(#[from] InvalidScore),
+    #[error("count out of range: {0}")]
+    Count(#[from] TryFromIntError),
+    #[error("voter of kind {kind:?} has an inconsistent account age")]
+    InvalidVoter { kind: String },
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum VoidError {
+    #[error("no voter has id {0}")]
+    UnknownVoter(i64),
+    #[error("database error: {0}")]
+    Db(#[from] sqlx::Error),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum AdminError {
+    #[error(transparent)]
+    Import(#[from] ImportError),
+    #[error(transparent)]
+    Recompute(#[from] RecomputeError),
+    #[error(transparent)]
+    Void(#[from] VoidError),
     #[error("database error: {0}")]
     Db(#[from] sqlx::Error),
 }

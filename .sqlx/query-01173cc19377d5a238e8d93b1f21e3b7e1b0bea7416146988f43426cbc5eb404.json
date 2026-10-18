@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO memberships (voter_id, tracker_id, status)\n         VALUES ($1, $2, $3::text::membership_status)\n         ON CONFLICT (voter_id, tracker_id)\n             DO UPDATE SET status = EXCLUDED.status, updated_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "01173cc19377d5a238e8d93b1f21e3b7e1b0bea7416146988f43426cbc5eb404"
+}

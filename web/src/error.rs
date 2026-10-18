@@ -43,6 +43,10 @@ pub enum PageError {
     Category(#[from] rankings_core::error::UnknownCategoryKey),
     #[error(transparent)]
     Axis(#[from] rankings_core::error::UnknownAxisKey),
+    #[error(transparent)]
+    Score(#[from] rankings_core::error::InvalidScore),
+    #[error(transparent)]
+    Membership(#[from] rankings_core::error::UnknownMembershipStatus),
     #[error("negative vote count: {0}")]
     NegativeCount(#[from] std::num::TryFromIntError),
 }

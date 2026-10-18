@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO anon_voters (fingerprint_hmac)\n         VALUES (decode(repeat(lpad(to_hex($1::integer), 2, '0'), 32), 'hex'))\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "anon_voters",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ad2b850b3fd4502eb3c5e6a78dc35c8d68663d1f17564008df20d7bdf8ca7bb4"
+}

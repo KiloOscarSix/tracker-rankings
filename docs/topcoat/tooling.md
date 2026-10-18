@@ -11,7 +11,7 @@ Everything here was read from `topcoat-cli-0.10.0`, `topcoat-ui-0.10.0`, `topcoa
 - [Output and cache directories](#output-and-cache-directories)
 - [Tailwind build integration](#tailwind-build-integration)
 - [Font and icon modules](#font-and-icon-modules)
-- [How this repository builds `web`](#how-this-repository-builds-web)
+- [How zayden builds `web`](#how-zayden-builds-web)
 - [What enabling fonts and icons changes](#what-enabling-fonts-and-icons-changes)
 - [Corrections to older notes](#corrections-to-older-notes)
 
@@ -219,7 +219,9 @@ All six topcoat crates are MIT. The repository's `Cargo.lock` lists `topcoat-fon
 
 Feature interplay observed while building the probes: topcoat 0.10.0 does not compile with `runtime` and without `asset` (`Asset: AttributeValueViewParts` is not satisfied in topcoat's own `runtime` module), so `runtime` needs `asset` next to it.
 
-## How this repository builds `web`
+## How zayden builds `web`
+
+> zayden's build, Docker and CI files. This project's `web/build.rs` follows the same Tailwind pattern with `styles.css` as input plus the vendored Iconify set (README "This repository"); its Docker and CI image jobs arrive with M8.
 
 Status: VERIFIED for the files read (`web/build.rs`, `web/Cargo.toml`, `docker/Dockerfile.web`, `.github/workflows/ci.yml`, `.dockerignore`, `README.md`); the Docker and CI jobs were not run. The proposed build script was run in `scratch/topcoat-kb/ui/web-build`.
 

@@ -1,6 +1,6 @@
 [package]
 name = "rankings-admin"
-description = "Import and maintenance CLI: trackerpathways seed import."
+description = "Import and maintenance CLI: trackerpathways seed import, score recompute, voter voiding."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

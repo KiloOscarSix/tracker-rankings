@@ -17,7 +17,13 @@ use web::auth::oauth::{OAuthClient, OAuthClients};
 use web::auth::reddit::RedditOAuth;
 use web::auth::sessions::spawn_session_pruning;
 use web::error::StartupError;
-use web::rate_limit::{AUTH_QUOTA, RateLimiters, spawn_rate_limit_cleanup};
+use web::rate_limit::{
+    AUTH_QUOTA,
+    RateLimiters,
+    VOTE_QUOTA,
+    spawn_rate_limit_cleanup,
+};
+use web::scores::spawn_score_refresh;
 use web::{config, router};
 
 #[tokio::main]
@@ -58,13 +64,15 @@ async fn run() -> Result<(), StartupError> {
         warn!("no OAuth provider is configured, so sign-in is disabled");
     }
 
-    let limiters = Arc::new(RateLimiters::new(AUTH_QUOTA));
+    let scoring = ScoringConfig::default();
+    let limiters = Arc::new(RateLimiters::new(AUTH_QUOTA, VOTE_QUOTA));
     spawn_session_pruning(pool.clone());
+    spawn_score_refresh(pool.clone(), scoring.clone());
     spawn_rate_limit_cleanup(Arc::clone(&limiters));
 
     let mut base = Router::builder()
         .app_context(pool)
-        .app_context(ScoringConfig::default())
+        .app_context(scoring)
         .app_context(OAuthClients::new(clients))
         .app_context(auth.cookie_key)
         .app_context(limiters)

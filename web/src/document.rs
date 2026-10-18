@@ -55,6 +55,7 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                         >
                             <a href="/" class="hover:text-foreground">"Rankings"</a>
                             <a href="/about" class="hover:text-foreground">"About"</a>
+                            <a href="/me" class="hover:text-foreground">"My votes"</a>
                             account_nav()
                         </nav>
                     </div>

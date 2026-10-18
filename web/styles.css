@@ -14,10 +14,8 @@
 @source not "./src/components/hover_card.rs";
 @source not "./src/components/input.rs";
 @source not "./src/components/kbd.rs";
-@source not "./src/components/label.rs";
 @source not "./src/components/pagination.rs";
 @source not "./src/components/progress.rs";
-@source not "./src/components/radio_group.rs";
 @source not "./src/components/select.rs";
 @source not "./src/components/separator.rs";
 @source not "./src/components/sheet.rs";

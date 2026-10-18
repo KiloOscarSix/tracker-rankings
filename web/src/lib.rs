@@ -9,5 +9,7 @@ pub mod queries;
 pub mod rankings;
 pub mod rate_limit;
 mod router;
+pub mod scores;
+pub mod votes;
 
 pub use router::router;

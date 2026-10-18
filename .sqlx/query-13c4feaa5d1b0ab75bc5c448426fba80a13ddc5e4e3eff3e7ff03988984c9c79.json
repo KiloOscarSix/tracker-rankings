@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM tracker_scores",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "13c4feaa5d1b0ab75bc5c448426fba80a13ddc5e4e3eff3e7ff03988984c9c79"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.effective_weight, s.vote_count FROM tracker_scores s\n         JOIN trackers t ON t.id = s.tracker_id\n         WHERE t.slug = 'aither' AND s.axis = 'overall'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "effective_weight",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "effective_weight"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "vote_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "vote_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "20ee649edc9d3b7a2053b615d6fe3ce630d7d8614a2e4fbe671bf64a221042d8"
+}

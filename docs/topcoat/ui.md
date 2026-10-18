@@ -20,6 +20,8 @@ Status labels are defined in [README.md](README.md). The probes under `scratch/t
 
 ## What is installed in `web/`
 
+> zayden's install state, not this project's. See README "This repository" for what is installed and linked here.
+
 Status: VERIFIED (checked against the files in `web/`).
 
 | File | Role |
@@ -414,6 +416,7 @@ radio_group(attrs, child)  // :28
 radio_group_item(attrs)  // :62
 ```
 
+- Layout: `class!` does not drop the base `grid gap-3`, so a passed `flex` loses to it. For a horizontal group pass `grid-flow-col auto-cols-max gap-x-4` (observed in this project, `web/src/pages/tracker.rs`).
 - Markup: `radio_group` `<div role="radiogroup" class="grid gap-3 [class]" ...attrs>`; `radio_group_item` `<span class="peer relative ..."><input type="radio" class="peer size-4 appearance-none ..." ...attrs><span class="... peer-checked:opacity-100"></span></span>`. Give every item the same `name`. For `radio_group_item`, `class` goes on the wrapper, other attributes on the `<input>`.
 - Client behavior: none; native radio grouping gives arrow-key movement. A11y: name the group with `aria-label` or `aria-labelledby` in `attrs`.
 
@@ -1644,6 +1647,8 @@ and edits `use topcoat::icon::{icon, iconify::iconify_icon};` to `use topcoat::i
 `icon(...)` renders `<svg viewBox width="1em" height="1em" style="vertical-align: -0.125em" aria-hidden="true">` (or `role="img" aria-label=...` when `label` is given) and `attrs` go on the `<svg>`.
 
 ## Using it in this app
+
+> The "state at the time of writing" below is zayden's. The steps (features, build script, stylesheet, icons, lint fix-ups) are how this project was wired too; its current state is in README "This repository".
 
 Status: VERIFIED (steps 1 to 7 in a probe crate that mirrors `web`).
 

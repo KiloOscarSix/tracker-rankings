@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.slug, t.name, m.status::text AS \"status!\",\n                  r.axis::text AS \"axis?\", r.score AS \"score?\"\n           FROM memberships m\n           JOIN trackers t ON t.id = m.tracker_id\n           LEFT JOIN ratings r\n               ON r.voter_id = m.voter_id AND r.tracker_id = m.tracker_id\n           WHERE m.voter_id = $1\n           ORDER BY t.name, t.slug",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "axis?",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "score?",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "ratings",
+            "name": "score"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "0d4fa56d5623d1a5dee9f89e22ffbe1aa9d6d4a899e8fd80a79dab9eb9e509d5"
+}
