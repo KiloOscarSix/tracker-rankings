@@ -23,7 +23,7 @@ use web::rate_limit::{
     VOTE_QUOTA,
     spawn_rate_limit_cleanup,
 };
-use web::scores::spawn_score_refresh;
+use web::scores::{PgScoreStore, REFRESH_POLICY, ScoreSignal, spawn_score_refresh};
 use web::{config, router};
 
 #[tokio::main]
@@ -67,7 +67,12 @@ async fn run() -> Result<(), StartupError> {
     let scoring = ScoringConfig::default();
     let limiters = Arc::new(RateLimiters::new(AUTH_QUOTA, VOTE_QUOTA));
     spawn_session_pruning(pool.clone());
-    spawn_score_refresh(pool.clone(), scoring.clone());
+    let (score_signal, score_changes) = ScoreSignal::channel();
+    spawn_score_refresh(
+        PgScoreStore::new(pool.clone(), scoring.clone()),
+        REFRESH_POLICY,
+        score_changes,
+    );
     spawn_rate_limit_cleanup(Arc::clone(&limiters));
 
     let mut base = Router::builder()
@@ -76,6 +81,7 @@ async fn run() -> Result<(), StartupError> {
         .app_context(OAuthClients::new(clients))
         .app_context(auth.cookie_key)
         .app_context(limiters)
+        .app_context(score_signal)
         .origin_policy(
             OriginPolicy::new().trust_origins([auth.public_base_url.clone()]),
         )

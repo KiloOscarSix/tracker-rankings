@@ -31,7 +31,7 @@ topcoat asset bundle -p web
 cargo run -p web                     # http://localhost:3000
 ```
 
-The web server recomputes `tracker_scores` every minute. Maintenance:
+The web server recomputes `tracker_scores` at startup and a few seconds after each vote (at most a minute into a steady stream), and again when a young account's votes reach full weight. Maintenance:
 
 ```sh
 cargo run -p rankings-admin -- recompute             # recompute tracker_scores now

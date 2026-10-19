@@ -9,6 +9,7 @@ use rankings_admin::import::import;
 use rankings_admin::seed;
 use rankings_core::config::ScoringConfig;
 use sqlx::PgPool;
+use tokio::sync::watch;
 use topcoat::asset::{AssetBundle, RouterBuilderAssetExt};
 use topcoat::router::request::Request;
 use topcoat::router::{
@@ -33,6 +34,7 @@ use web::document::STYLESHEET;
 use web::error::AuthError;
 use web::rate_limit::{AUTH_QUOTA, RateLimiters, VOTE_QUOTA};
 use web::router;
+use web::scores::ScoreSignal;
 
 const STYLESHEET_FILE: &str = "tailwind-0123456789abcdef.css";
 const STYLESHEET_BODY: &str = ".page{display:block}";
@@ -118,6 +120,27 @@ pub(crate) async fn app_with(
     auth_quota: Quota,
     extra: impl FnOnce(RouterBuilder) -> RouterBuilder,
 ) -> TestResult<Router> {
+    let (signal, _changes) = ScoreSignal::channel();
+    build(pool, seed, auth_quota, signal, extra).await
+}
+
+/// The app plus the receiver that counts its score-change signals.
+pub(crate) async fn app_observed(
+    pool: PgPool,
+    seed: bool,
+) -> TestResult<(Router, watch::Receiver<u64>)> {
+    let (signal, changes) = ScoreSignal::channel();
+    let router = build(pool, seed, AUTH_QUOTA, signal, |base| base).await?;
+    Ok((router, changes))
+}
+
+async fn build(
+    pool: PgPool,
+    seed: bool,
+    auth_quota: Quota,
+    signal: ScoreSignal,
+    extra: impl FnOnce(RouterBuilder) -> RouterBuilder,
+) -> TestResult<Router> {
     if seed {
         let dir =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/trackerpathways");
@@ -145,7 +168,8 @@ pub(crate) async fn app_with(
         .app_context(ScoringConfig::default())
         .app_context(OAuthClients::new(clients))
         .app_context(cookie_key()?)
-        .app_context(Arc::new(RateLimiters::new(auth_quota, VOTE_QUOTA)));
+        .app_context(Arc::new(RateLimiters::new(auth_quota, VOTE_QUOTA)))
+        .app_context(signal);
     Ok(router(extra(base)))
 }
 

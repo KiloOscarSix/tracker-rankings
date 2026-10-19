@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT (\n                      min(extract(epoch FROM a.provider_created_at))\n                      + $1::integer * 86400\n                      - extract(epoch FROM now())\n                  )::float8 AS \"secs?\"\n           FROM accounts a\n           JOIN voters v ON v.account_id = a.id\n           WHERE extract(epoch FROM now() - a.provider_created_at) < $1::integer * 86400\n             AND EXISTS (\n                 SELECT 1\n                 FROM ratings r\n                 JOIN trackers t ON t.id = r.tracker_id AND t.listed\n                 WHERE r.voter_id = v.id\n             )",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "secs?",
+        "type_info": "Float8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5c497e1d20c96eb692201a92e40011e2da14724d7191d56b2e0aedc41b5ee396"
+}

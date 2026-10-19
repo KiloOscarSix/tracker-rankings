@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO accounts (\n             provider, provider_subject, display_name, provider_created_at\n         )\n         VALUES (\n             'discord', 'young', 'young',\n             now() - interval '30 days' + interval '2 seconds'\n         )\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "accounts",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f9540ee2e8fcbce07c16eb7d3975fcb34bef2331ab2654366598629cabc3ca9f"
+}

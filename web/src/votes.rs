@@ -16,7 +16,7 @@ use topcoat::router::{RouterBuilder, path_param, route};
 use crate::auth::anon::{clear_anon_cookie, existing_anon_voter};
 use crate::auth::sessions::{current_account, sign_out};
 use crate::auth::voter::{current_voter, voter_for_write};
-use crate::context::db;
+use crate::context::{db, score_signal};
 use crate::queries::votes::{
     delete_account,
     delete_anon_identity,
@@ -58,11 +58,13 @@ pub async fn membership(
 ) -> Result<SeeOther> {
     let slug: &str = path_param::<Slug>(cx);
     let pool = db(cx)?;
+    let signal = score_signal(cx)?;
     let tracker = listed_tracker_id(pool, slug).await?.ok_or_not_found()?;
 
     if form.status == REMOVE {
         if let Some(voter) = current_voter(cx).await? {
             remove_membership(pool, voter, tracker).await?;
+            signal.notify();
         }
     } else {
         let status = form
@@ -79,6 +81,7 @@ pub async fn membership(
 pub async fn ratings(cx: &Cx, Form(form): Form<RatingsForm>) -> Result<SeeOther> {
     let slug: &str = path_param::<Slug>(cx);
     let pool = db(cx)?;
+    let signal = score_signal(cx)?;
     let tracker = listed_tracker_id(pool, slug).await?.ok_or_not_found()?;
 
     let picks = [
@@ -105,18 +108,25 @@ pub async fn ratings(cx: &Cx, Form(form): Form<RatingsForm>) -> Result<SeeOther>
         return Err(forbidden().into());
     }
     upsert_ratings(pool, voter, tracker, &scores).await?;
+    signal.notify();
     Ok(see_other(format!("/t/{slug}#vote")))
 }
 
 #[route(POST "/me/delete")]
 pub async fn delete_my_data(cx: &Cx) -> Result<SeeOther> {
     let pool = db(cx)?;
-    if let Some(account) = current_account(cx).await? {
+    let signal = score_signal(cx)?;
+    let account = current_account(cx).await?;
+    if let Some(account) = &account {
         sign_out(cx, pool).await?;
         delete_account(pool, account.id).await?;
     }
-    if let Some(voter) = existing_anon_voter(cx).await? {
+    let anon = existing_anon_voter(cx).await?;
+    if let Some(voter) = anon {
         delete_anon_identity(pool, voter).await?;
+    }
+    if account.is_some() || anon.is_some() {
+        signal.notify();
     }
     clear_anon_cookie(cx);
     Ok(see_other("/me?deleted=1"))

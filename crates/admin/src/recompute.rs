@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use rankings_core::aggregate::{AxisRating, aggregate};
 use rankings_core::axis::Axis;
 use rankings_core::config::ScoringConfig;
@@ -91,4 +93,33 @@ pub async fn refresh_scores(
 
     tx.commit().await?;
     Ok(RefreshReport { ratings: u64::try_from(ratings.len())?, scores: written })
+}
+
+/// Time until the oldest still-young account with a rating on a listed
+/// tracker reaches `young_account_days`, when its votes gain full weight
+pub async fn next_weight_change(
+    pool: &PgPool,
+    cfg: &ScoringConfig,
+) -> Result<Option<Duration>, RecomputeError> {
+    let days = i32::try_from(cfg.weights.young_account_days)?;
+    let secs = sqlx::query_scalar!(
+        r#"SELECT (
+                      min(extract(epoch FROM a.provider_created_at))
+                      + $1::integer * 86400
+                      - extract(epoch FROM now())
+                  )::float8 AS "secs?"
+           FROM accounts a
+           JOIN voters v ON v.account_id = a.id
+           WHERE extract(epoch FROM now() - a.provider_created_at) < $1::integer * 86400
+             AND EXISTS (
+                 SELECT 1
+                 FROM ratings r
+                 JOIN trackers t ON t.id = r.tracker_id AND t.listed
+                 WHERE r.voter_id = v.id
+             )"#,
+        days
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(secs.map(|s| Duration::try_from_secs_f64(s.max(0.0))).transpose()?)
 }

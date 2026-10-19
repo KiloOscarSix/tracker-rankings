@@ -1,6 +1,7 @@
 use std::io;
 use std::num::{ParseIntError, TryFromIntError};
 use std::path::PathBuf;
+use std::time::TryFromFloatSecsError;
 
 use rankings_core::error::{InvalidScore, UnknownAxisKey, UnknownCategoryToken};
 
@@ -51,6 +52,8 @@ pub enum RecomputeError {
     Score(#[from] InvalidScore),
     #[error("count out of range: {0}")]
     Count(#[from] TryFromIntError),
+    #[error("wait out of range: {0}")]
+    Wait(#[from] TryFromFloatSecsError),
     #[error("voter of kind {kind:?} has an inconsistent account age")]
     InvalidVoter { kind: String },
 }

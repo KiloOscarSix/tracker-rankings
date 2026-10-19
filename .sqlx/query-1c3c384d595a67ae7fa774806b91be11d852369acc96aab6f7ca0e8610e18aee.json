@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.effective_weight\n         FROM tracker_scores s\n         JOIN trackers t ON t.id = s.tracker_id\n         WHERE t.slug = 'aither' AND s.axis = 'overall'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "effective_weight",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "tracker_scores",
+            "name": "effective_weight"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1c3c384d595a67ae7fa774806b91be11d852369acc96aab6f7ca0e8610e18aee"
+}

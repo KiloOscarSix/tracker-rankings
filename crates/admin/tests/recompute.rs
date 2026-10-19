@@ -1,8 +1,9 @@
 use std::path::Path;
+use std::time::Duration;
 
 use rankings_admin::error::{ImportError, VoidError};
 use rankings_admin::import::import;
-use rankings_admin::recompute::{RefreshReport, refresh_scores};
+use rankings_admin::recompute::{RefreshReport, next_weight_change, refresh_scores};
 use rankings_admin::seed::{self, Seed, Source};
 use rankings_admin::void::{VoidReport, void_voter};
 use rankings_core::config::ScoringConfig;
@@ -149,4 +150,27 @@ async fn void_voter_removes_votes_and_refresh_drops_them(pool: PgPool) {
         void_voter(&pool, i64::MAX).await,
         Err(VoidError::UnknownVoter(id)) if id == i64::MAX
     ));
+}
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn next_weight_change_finds_the_oldest_young_rater(pool: PgPool) {
+    let (seed, source) = vendored().unwrap();
+    import(&pool, &seed, &source).await.unwrap();
+    let cfg = ScoringConfig::default();
+
+    assert_eq!(next_weight_change(&pool, &cfg).await.unwrap(), None);
+
+    let young10 = account_voter(&pool, "young10", 10).await.unwrap();
+    rate(&pool, young10, "aither", "overall", 4).await.unwrap();
+    let young20 = account_voter(&pool, "young20", 20).await.unwrap();
+    rate(&pool, young20, "aither", "content", 4).await.unwrap();
+    account_voter(&pool, "unrated", 25).await.unwrap();
+    let old = account_voter(&pool, "old", 400).await.unwrap();
+    rate(&pool, old, "aither", "overall", 3).await.unwrap();
+    let anon = anon_voter(&pool, 1).await.unwrap();
+    rate(&pool, anon, "aither", "overall", 5).await.unwrap();
+
+    let wait = next_weight_change(&pool, &cfg).await.unwrap().unwrap();
+    let expected = Duration::from_hours(10 * 24);
+    assert!(wait.abs_diff(expected) < Duration::from_secs(60), "{wait:?}");
 }

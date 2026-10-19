@@ -9,6 +9,7 @@ use common::{
     CLIENT,
     TestResult,
     app,
+    app_observed,
     form_request,
     location,
     request,
@@ -203,5 +204,29 @@ async fn deleting_my_data_cascades(pool: PgPool) -> TestResult<()> {
         ),
         (0, 0, 0, 0, 0, 0)
     );
+    Ok(())
+}
+
+#[sqlx::test(migrations = "../migrations")]
+async fn score_writes_signal_the_refresher(pool: PgPool) -> TestResult<()> {
+    let (router, changes) = app_observed(pool, true).await?;
+    let session = sign_in(&router, "discord").await?;
+    let cookie = format!("__Host-session={session}");
+    let headers = [AGENT, ("cookie", cookie.as_str())];
+
+    // (path, form, expected status, expected signal count after the request)
+    for (path, form, status, signals) in [
+        ("/vote/aither/ratings", "overall=4", StatusCode::FORBIDDEN, 0),
+        ("/vote/aither/membership", "status=current", StatusCode::SEE_OTHER, 0),
+        ("/vote/aither/ratings", "overall=4", StatusCode::SEE_OTHER, 1),
+        ("/vote/aither/membership", "status=former", StatusCode::SEE_OTHER, 1),
+        ("/vote/aither/membership", "status=none", StatusCode::SEE_OTHER, 2),
+        ("/me/delete", "", StatusCode::SEE_OTHER, 3),
+    ] {
+        let reply =
+            send(&router, form_request(path, form, &headers, CLIENT)?).await?;
+        assert_eq!(reply.status, status, "{path} {form}");
+        assert_eq!(*changes.borrow(), signals, "{path} {form}");
+    }
     Ok(())
 }

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO memberships (voter_id, tracker_id, status)\n         SELECT $1, id, 'current' FROM trackers WHERE slug = 'aither'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9525e0bb5171892b2dd09d4a400d788555698a92e0c4d3148968c6a02f6ef592"
+}

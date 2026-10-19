@@ -111,11 +111,11 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
                 .collect()
         });
     let vote_note = if signed_in {
-        "Community scores refresh every minute.".to_owned()
+        "Community scores update a few seconds after each vote.".to_owned()
     } else {
         format!(
             "Anonymous votes count {anonymous_weight}\u{d7}; sign in for full weight. \
-             Community scores refresh every minute."
+             Community scores update a few seconds after each vote."
         )
     };
 

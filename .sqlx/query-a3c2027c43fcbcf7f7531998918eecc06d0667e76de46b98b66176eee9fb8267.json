@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO ratings (voter_id, tracker_id, axis, score)\n         SELECT $1, id, 'overall', 4 FROM trackers WHERE slug = 'aither'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a3c2027c43fcbcf7f7531998918eecc06d0667e76de46b98b66176eee9fb8267"
+}

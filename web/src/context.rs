@@ -8,6 +8,7 @@ use crate::auth::oauth::OAuthClients;
 use crate::config::CookieKey;
 use crate::error::PageError;
 use crate::rate_limit::RateLimiters;
+use crate::scores::ScoreSignal;
 
 pub fn db(cx: &Cx) -> Result<&PgPool, PageError> {
     try_app_context::<PgPool>(cx).ok_or(PageError::MissingContext("PgPool"))
@@ -30,4 +31,9 @@ pub fn cookie_key(cx: &Cx) -> Result<&CookieKey, PageError> {
 pub fn rate_limiters(cx: &Cx) -> Result<&Arc<RateLimiters>, PageError> {
     try_app_context::<Arc<RateLimiters>>(cx)
         .ok_or(PageError::MissingContext("RateLimiters"))
+}
+
+pub fn score_signal(cx: &Cx) -> Result<&ScoreSignal, PageError> {
+    try_app_context::<ScoreSignal>(cx)
+        .ok_or(PageError::MissingContext("ScoreSignal"))
 }

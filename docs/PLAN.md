@@ -148,7 +148,8 @@ One milestone per session and per small set of commits. Never commit without the
   - A background refresh of `tracker_scores`, plus `admin recompute` and `admin void-voter`.
   - `/me`: memberships, my votes and "delete my data".
   - **Done when:** tests show an anonymous vote carries 0.7 weight, re-voting overwrites, and deletion cascades.
-- [ ] **Event-driven score refresh.**
+- [x] **Event-driven score refresh.**
+  - Deviation: setting or changing a membership status does not signal, because it cannot change a score (removal does, since ratings cascade). The rest period is 5 s and the cap 1 min (`web/src/scores.rs` `REFRESH_POLICY`); a failed refresh retries after the cap; the age wake adds a 1 s margin and comes from `rankings-admin` `recompute::next_weight_change`.
   - M6 recomputes `tracker_scores` every minute, which is dead work while the site has no traffic. Replace the timer with a refresh that runs only when something changed.
   - Every write that changes a score signals the refresher: rating and membership changes, "delete my data". `admin recompute` and `admin void-voter` keep refreshing directly.
   - A rest period handles spikes: the first signal arms a short delay, every signal inside it is absorbed, then one recompute covers them all. A cap on the total wait keeps a steady stream of votes from postponing the refresh forever.
