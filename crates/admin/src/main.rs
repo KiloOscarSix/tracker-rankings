@@ -4,12 +4,12 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use rankings_admin::error::AdminError;
-use rankings_admin::recompute::refresh_scores;
+use rankings_admin::recompute::{refresh_pairwise, refresh_scores};
 use rankings_admin::void::void_voter;
 use rankings_admin::{import, seed};
 use rankings_core::config::ScoringConfig;
 use sqlx::PgPool;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -31,7 +31,7 @@ enum Command {
         #[arg(long, default_value = "data/trackerpathways")]
         data_dir: PathBuf,
     },
-    /// Recompute `tracker_scores` from the current ratings.
+    /// Recompute `tracker_scores` and `pairwise_scores` from the current votes.
     Recompute,
     /// Delete every rating, membership and pairwise vote of one voter, then
     /// recompute.
@@ -68,14 +68,7 @@ async fn run(cli: Cli) -> Result<(), AdminError> {
                 "import complete"
             );
         },
-        Command::Recompute => {
-            let report = refresh_scores(&pool, &ScoringConfig::default()).await?;
-            info!(
-                ratings = report.ratings,
-                scores = report.scores,
-                "recompute complete"
-            );
-        },
+        Command::Recompute => recompute(&pool).await?,
         Command::VoidVoter { voter_id } => {
             let voided = void_voter(&pool, voter_id).await?;
             info!(
@@ -85,13 +78,26 @@ async fn run(cli: Cli) -> Result<(), AdminError> {
                 pairwise_votes = voided.pairwise_votes,
                 "voter voided"
             );
-            let report = refresh_scores(&pool, &ScoringConfig::default()).await?;
-            info!(
-                ratings = report.ratings,
-                scores = report.scores,
-                "recompute complete"
-            );
+            recompute(&pool).await?;
         },
+    }
+    Ok(())
+}
+
+async fn recompute(pool: &PgPool) -> Result<(), AdminError> {
+    let cfg = ScoringConfig::default();
+
+    let report = refresh_scores(pool, &cfg).await?;
+    info!(ratings = report.ratings, scores = report.scores, "recompute complete");
+
+    let report = refresh_pairwise(pool, &cfg).await?;
+    info!(
+        votes = report.votes,
+        scores = report.scores,
+        "pairwise recompute complete"
+    );
+    if !report.converged {
+        warn!("Bradley–Terry fit did not converge");
     }
     Ok(())
 }

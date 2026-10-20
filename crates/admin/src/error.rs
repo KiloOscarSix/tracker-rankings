@@ -3,7 +3,12 @@ use std::num::{ParseIntError, TryFromIntError};
 use std::path::PathBuf;
 use std::time::TryFromFloatSecsError;
 
-use rankings_core::error::{InvalidScore, UnknownAxisKey, UnknownCategoryToken};
+use rankings_core::error::{
+    InvalidScore,
+    PairwiseError,
+    UnknownAxisKey,
+    UnknownCategoryToken,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ImportError {
@@ -50,6 +55,8 @@ pub enum RecomputeError {
     Axis(#[from] UnknownAxisKey),
     #[error(transparent)]
     Score(#[from] InvalidScore),
+    #[error(transparent)]
+    Pairwise(#[from] PairwiseError),
     #[error("count out of range: {0}")]
     Count(#[from] TryFromIntError),
     #[error("wait out of range: {0}")]

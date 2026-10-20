@@ -54,6 +54,7 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                             class="flex items-baseline gap-4 text-sm text-muted-foreground"
                         >
                             <a href="/" class="hover:text-foreground">"Rankings"</a>
+                            <a href="/compare" class="hover:text-foreground">"Compare"</a>
                             <a href="/about" class="hover:text-foreground">"About"</a>
                             <a href="/me" class="hover:text-foreground">"My votes"</a>
                             account_nav()

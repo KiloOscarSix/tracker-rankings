@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT w.id AS winner_id, l.id AS loser_id,\n                  (w.categories && l.categories) AS \"share_category!\"\n           FROM trackers w, trackers l\n           WHERE w.slug = $1 AND w.listed AND l.slug = $2 AND l.listed",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "winner_id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "loser_id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "share_category!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "ed5151245797e100b94b1724c1b10692538ab0daa05f31cb3489c51b4e268df6"
+}

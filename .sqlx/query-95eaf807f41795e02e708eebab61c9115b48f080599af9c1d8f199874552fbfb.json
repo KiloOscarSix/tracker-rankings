@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.slug, t.name, s.strength, s.vote_count\n         FROM pairwise_scores s\n         JOIN trackers t ON t.id = s.tracker_id AND t.listed\n         ORDER BY s.strength DESC, t.name",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "slug"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "trackers",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "strength",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "pairwise_scores",
+            "name": "strength"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "vote_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "pairwise_scores",
+            "name": "vote_count"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "95eaf807f41795e02e708eebab61c9115b48f080599af9c1d8f199874552fbfb"
+}

@@ -156,7 +156,8 @@ One milestone per session and per small set of commits. Never commit without the
   - Account age changes a vote's weight with no write (0.8 becomes 1.0 at 30 days), so the refresher also wakes once when the youngest rating account crosses `young_account_days`.
   - Recompute once at startup. M7's `pairwise_scores` refresh uses the same trigger.
   - **Done when:** tests show an idle server never recomputes, a burst of votes produces one recompute after the rest period, and a young account's vote reaches full weight without a new write.
-- [ ] **M7: Pairwise.**
+- [x] **M7: Pairwise.**
+  - Deviation: migration 0005 allows one vote per voter per unordered pair (re-voting overwrites, via a unique `LEAST`/`GREATEST` index). `POST /vote/compare` accepts a pair that shares a category (any voter) or that the voter is a member of on both sides (else 403). The ranking on `/compare` is global; `rankings-core` gains `pairwise::rank`, and `recompute::refresh_pairwise` runs on the same refresh trigger and in `admin recompute`/`void-voter`; pairwise voters also count for the age wake.
   - `/compare` shows matchups drawn from the voter's memberships or from one category.
   - The Bradley–Terry ranking is refreshed into `pairwise_scores`.
   - **Done when:** a vote is recorded and the ranking page renders from the fitted scores.

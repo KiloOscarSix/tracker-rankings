@@ -5,6 +5,7 @@ pub mod category;
 pub mod config;
 pub mod error;
 pub mod membership;
+pub mod pairwise;
 pub mod score;
 pub mod slug;
 pub mod tier;

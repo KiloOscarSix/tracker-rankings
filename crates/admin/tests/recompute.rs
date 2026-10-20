@@ -173,4 +173,19 @@ async fn next_weight_change_finds_the_oldest_young_rater(pool: PgPool) {
     let wait = next_weight_change(&pool, &cfg).await.unwrap().unwrap();
     let expected = Duration::from_hours(10 * 24);
     assert!(wait.abs_diff(expected) < Duration::from_secs(60), "{wait:?}");
+
+    let pairwise_only = account_voter(&pool, "pairwise29", 29).await.unwrap();
+    sqlx::query!(
+        "INSERT INTO pairwise_votes (voter_id, winner_id, loser_id)
+         SELECT $1, w.id, l.id FROM trackers w, trackers l
+         WHERE w.slug = 'aither' AND l.slug = 'anthelion'",
+        pairwise_only
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let wait = next_weight_change(&pool, &cfg).await.unwrap().unwrap();
+    let expected = Duration::from_hours(24);
+    assert!(wait.abs_diff(expected) < Duration::from_secs(60), "{wait:?}");
 }

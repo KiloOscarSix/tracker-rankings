@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pairwise_votes (voter_id, winner_id, loser_id)\n         VALUES ($1, $2, $3)\n         ON CONFLICT (voter_id, LEAST(winner_id, loser_id), GREATEST(winner_id, loser_id))\n             DO UPDATE SET winner_id = EXCLUDED.winner_id,\n                           loser_id = EXCLUDED.loser_id,\n                           created_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "888e18c72efab4bc300d05de66b37d01a101b6b1b300f68f60a055381fb047c3"
+}

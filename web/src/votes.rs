@@ -1,4 +1,5 @@
 use rankings_core::axis::Axis;
+use rankings_core::category::Category;
 use rankings_core::membership::MembershipStatus;
 use rankings_core::score::Score;
 use topcoat::Result;
@@ -17,6 +18,8 @@ use crate::auth::anon::{clear_anon_cookie, existing_anon_voter};
 use crate::auth::sessions::{current_account, sign_out};
 use crate::auth::voter::{current_voter, voter_for_write};
 use crate::context::{db, score_signal};
+use crate::pages::compare::compare_href;
+use crate::queries::pairwise::{pair_ids, upsert_pairwise_vote};
 use crate::queries::votes::{
     delete_account,
     delete_anon_identity,
@@ -46,9 +49,17 @@ pub struct RatingsForm {
     pub longevity: Option<i16>,
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct CompareForm {
+    pub a: String,
+    pub b: String,
+    pub winner: String,
+    pub category: Option<String>,
+}
+
 #[must_use]
 pub fn routes(base: RouterBuilder) -> RouterBuilder {
-    base.route(membership).route(ratings).route(delete_my_data)
+    base.route(membership).route(ratings).route(compare_vote).route(delete_my_data)
 }
 
 #[route(POST "/vote/{slug}/membership")]
@@ -110,6 +121,47 @@ pub async fn ratings(cx: &Cx, Form(form): Form<RatingsForm>) -> Result<SeeOther>
     upsert_ratings(pool, voter, tracker, &scores).await?;
     signal.notify();
     Ok(see_other(format!("/t/{slug}#vote")))
+}
+
+#[route(POST "/vote/compare")]
+pub async fn compare_vote(
+    cx: &Cx,
+    Form(form): Form<CompareForm>,
+) -> Result<SeeOther> {
+    if form.a == form.b {
+        return Err(bad_request("pick two different trackers").into());
+    }
+    let loser = if form.winner == form.a {
+        &form.b
+    } else if form.winner == form.b {
+        &form.a
+    } else {
+        return Err(bad_request("the winner must be one of the pair").into());
+    };
+    let category = form
+        .category
+        .as_deref()
+        .map(str::parse::<Category>)
+        .transpose()
+        .map_err(|e| bad_request(e.to_string()))?;
+    let pool = db(cx)?;
+    let signal = score_signal(cx)?;
+    let pair = pair_ids(pool, &form.winner, loser).await?.ok_or_not_found()?;
+
+    let voter = if pair.share_category {
+        voter_for_write(cx).await?
+    } else {
+        let voter = current_voter(cx).await?.ok_or_forbidden()?;
+        if !is_member(pool, voter, pair.winner_id).await?
+            || !is_member(pool, voter, pair.loser_id).await?
+        {
+            return Err(forbidden().into());
+        }
+        voter
+    };
+    upsert_pairwise_vote(pool, voter, pair.winner_id, pair.loser_id).await?;
+    signal.notify();
+    Ok(see_other(compare_href(category) + "#matchup"))
 }
 
 #[route(POST "/me/delete")]

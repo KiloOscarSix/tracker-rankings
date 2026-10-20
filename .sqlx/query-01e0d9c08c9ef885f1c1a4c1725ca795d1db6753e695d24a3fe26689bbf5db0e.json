@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM pairwise_scores",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "01e0d9c08c9ef885f1c1a4c1725ca795d1db6753e695d24a3fe26689bbf5db0e"
+}

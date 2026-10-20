@@ -1,7 +1,11 @@
 use std::time::Duration;
 
 use rankings_admin::error::RecomputeError;
-use rankings_admin::recompute::{next_weight_change, refresh_scores};
+use rankings_admin::recompute::{
+    next_weight_change,
+    refresh_pairwise,
+    refresh_scores,
+};
 use rankings_core::config::ScoringConfig;
 use sqlx::PgPool;
 use tokio::sync::watch;
@@ -59,6 +63,10 @@ impl PgScoreStore {
 impl ScoreStore for PgScoreStore {
     async fn refresh(&self) -> Result<UntilWeightChange, RecomputeError> {
         refresh_scores(&self.pool, &self.cfg).await?;
+        let pairwise = refresh_pairwise(&self.pool, &self.cfg).await?;
+        if !pairwise.converged {
+            warn!("Bradley–Terry fit did not converge");
+        }
         let until = next_weight_change(&self.pool, &self.cfg).await?;
         Ok(until.map(|until| until.saturating_add(AGE_CROSSING_SLACK)))
     }

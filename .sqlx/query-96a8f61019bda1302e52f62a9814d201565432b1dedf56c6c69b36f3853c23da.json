@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.winner_id, p.loser_id, v.kind::text AS \"kind!\",\n                  floor(\n                      extract(epoch FROM now() - a.provider_created_at) / 86400\n                  )::integer AS \"age_days?\"\n           FROM pairwise_votes p\n           JOIN voters v ON v.id = p.voter_id\n           JOIN trackers w ON w.id = p.winner_id AND w.listed\n           JOIN trackers l ON l.id = p.loser_id AND l.listed\n           LEFT JOIN accounts a ON a.id = v.account_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "winner_id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "pairwise_votes",
+            "name": "winner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "loser_id",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "pairwise_votes",
+            "name": "loser_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "kind!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "age_days?",
+        "type_info": "Int4",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "96a8f61019bda1302e52f62a9814d201565432b1dedf56c6c69b36f3853c23da"
+}
