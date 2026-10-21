@@ -48,9 +48,13 @@ CI publishes `ghcr.io/kilooscarsix/tracker-rankings` on every push to `main` (`l
 
 ```sh
 cp compose.example.yaml compose.yaml   # then set POSTGRES_PASSWORD and COOKIE_KEY in .env
-docker compose up -d                   # applies migrations, then starts the site on 127.0.0.1:3000
-docker compose run --rm admin import
+docker compose up -d db
+docker compose run --rm web rankings-admin migrate
+docker compose run --rm web rankings-admin import
+docker compose up -d                   # site on 127.0.0.1:3000
 ```
+
+Maintenance runs the same way, as one-off commands in the `web` image: `docker compose run --rm web rankings-admin <migrate|import|recompute|void-voter <id>>`. Run `migrate` before `up -d` after pulling an image with new migrations, and `import` after re-vendoring the seed.
 
 Put a TLS reverse proxy in front, set `PUBLIC_BASE_URL` to its origin and `TRUSTED_PROXIES` to the compose network's gateway. To build the image locally: `docker build -t ghcr.io/kilooscarsix/tracker-rankings:latest .`
 
