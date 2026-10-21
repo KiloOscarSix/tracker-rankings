@@ -1,0 +1,30 @@
+name: Set up Rust
+description: >
+  Installs the stable toolchain, restores the cargo cache and fetches the
+  checksum-pinned Tailwind CLI that `web/build.rs` uses. Reads
+  `TAILWIND_VERSION` and `TAILWIND_SHA256` from the workflow env.
+
+inputs:
+  components:
+    description: Extra rustup components, comma-separated.
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - run: rustup toolchain install stable --profile minimal ${COMPONENTS:+--component "$COMPONENTS"}
+      shell: bash
+      env:
+        COMPONENTS: ${{ inputs.components }}
+    - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      with:
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+        cache-on-failure: true
+    - name: Fetch Tailwind CLI
+      shell: bash
+      run: |
+        curl -fsSL --retry 3 -o "$RUNNER_TEMP/tailwindcss" \
+          "https://github.com/tailwindlabs/tailwindcss/releases/download/v${TAILWIND_VERSION}/tailwindcss-linux-x64"
+        echo "${TAILWIND_SHA256}  $RUNNER_TEMP/tailwindcss" | sha256sum -c -
+        chmod +x "$RUNNER_TEMP/tailwindcss"
+        echo "TAILWIND_CLI=$RUNNER_TEMP/tailwindcss" >> "$GITHUB_ENV"

@@ -81,6 +81,8 @@ pub enum AdminError {
     Recompute(#[from] RecomputeError),
     #[error(transparent)]
     Void(#[from] VoidError),
+    #[error("migration failed: {0}")]
+    Migrate(#[from] sqlx::migrate::MigrateError),
     #[error("database error: {0}")]
     Db(#[from] sqlx::Error),
 }

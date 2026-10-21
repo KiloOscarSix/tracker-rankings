@@ -25,7 +25,6 @@ env:
   TAILWIND_VERSION: 4.3.2
   TAILWIND_SHA256: 5036c4fb4328e0bcdbb6065c70d8ac9452e0d4c947113a788a8f94fd390425c1
 
-# Milestone 8 adds the image build.
 jobs:
   fmt:
     name: rustfmt
@@ -47,20 +46,9 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: rustup toolchain install stable --profile minimal --component clippy
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: ./.github/actions/setup-rust
         with:
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: true
-      # Every job that compiles `web` reuses this step through the alias.
-      - &fetch-tailwind
-        name: Fetch Tailwind CLI
-        run: |
-          curl -fsSL --retry 3 -o "$RUNNER_TEMP/tailwindcss" \
-            "https://github.com/tailwindlabs/tailwindcss/releases/download/v${TAILWIND_VERSION}/tailwindcss-linux-x64"
-          echo "${TAILWIND_SHA256}  $RUNNER_TEMP/tailwindcss" | sha256sum -c -
-          chmod +x "$RUNNER_TEMP/tailwindcss"
-          echo "TAILWIND_CLI=$RUNNER_TEMP/tailwindcss" >> "$GITHUB_ENV"
+          components: clippy
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - uses: ./.github/actions/cancel-run
         if: failure()
@@ -73,7 +61,7 @@ jobs:
       actions: write
     timeout-minutes: 30
     services:
-      postgres:
+      postgres: &postgres
         image: postgres:18-alpine
         env:
           POSTGRES_USER: postgres
@@ -90,12 +78,7 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/ladder
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: rustup toolchain install stable --profile minimal
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-        with:
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: true
-      - *fetch-tailwind
+      - uses: ./.github/actions/setup-rust
       - run: cargo test --workspace --all-targets --locked
       - uses: ./.github/actions/cancel-run
         if: failure()
@@ -118,40 +101,36 @@ jobs:
       actions: write
     timeout-minutes: 30
     services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: ladder
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+      postgres: *postgres
     env:
       SQLX_OFFLINE: false
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/ladder
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: rustup toolchain install stable --profile minimal
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-        with:
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: true
+      - uses: ./.github/actions/setup-rust
       - name: Install sqlx-cli
         run: |
           version="$(grep -A1 '^name = "sqlx"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')"
           test -n "$version"
           cargo install "sqlx-cli@${version}" --locked --no-default-features \
             --features postgres,rustls
-      - name: Apply migrations
-        run: sqlx migrate run
-      - *fetch-tailwind
-      - name: Check the offline cache is current
-        run: >-
-          cargo sqlx prepare --workspace --check -- --all-targets --locked
+      - run: sqlx migrate run
+      - run: cargo sqlx prepare --workspace --check -- --all-targets --locked
       - uses: ./.github/actions/cancel-run
         if: failure()
+
+  # Races `test` and `sqlx`, whose `cancel-run` step stops it if they fail.
+  image:
+    name: image
+    needs: [fmt, clippy, deny]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/build-image
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          token: ${{ secrets.GITHUB_TOKEN }}

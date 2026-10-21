@@ -1,0 +1,64 @@
+FROM rust:1-slim-trixie AS chef
+ENV RUSTUP_TOOLCHAIN=stable
+WORKDIR /app
+RUN cargo install cargo-chef --locked
+
+# Plan the dependency build
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+# Tailwind CLI, pinned and checksummed so the build never downloads
+# an unverified binary from build.rs.
+FROM debian:trixie-slim AS tailwind
+ARG TAILWIND_VERSION=4.3.2
+ARG TAILWIND_SHA256=5036c4fb4328e0bcdbb6065c70d8ac9452e0d4c947113a788a8f94fd390425c1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL -o /tailwindcss \
+    "https://github.com/tailwindlabs/tailwindcss/releases/download/v${TAILWIND_VERSION}/tailwindcss-linux-x64" \
+    && echo "${TAILWIND_SHA256}  /tailwindcss" | sha256sum -c - \
+    && chmod 0755 /tailwindcss
+
+# Build
+FROM chef AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake clang libclang-dev perl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN cargo install topcoat-cli@0.10.0 --locked
+
+COPY --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
+ENV SQLX_OFFLINE=true \
+    TAILWIND_CLI=/usr/local/bin/tailwindcss
+
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --locked --recipe-path recipe.json
+
+COPY . .
+RUN cargo build --release --locked -p web -p rankings-admin \
+    && topcoat asset bundle --release -p web
+
+# Runtime
+FROM debian:trixie-slim AS runtime
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --system ladder && useradd --system --gid ladder ladder
+
+COPY --from=builder /app/target/release/web            /app/web
+COPY --from=builder /app/target/release/assets         /app/assets
+COPY --from=builder /app/target/release/rankings-admin /app/rankings-admin
+COPY data/trackerpathways /app/data/trackerpathways
+
+ENV PATH=/app:$PATH \
+    BIND_ADDR=0.0.0.0:3000
+
+EXPOSE 3000
+USER ladder
+CMD ["web"]

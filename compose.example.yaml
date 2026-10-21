@@ -1,0 +1,46 @@
+name: tracker-rankings
+
+x-image: &image "ghcr.io/kilooscarsix/tracker-rankings:${IMAGE_TAG:-latest}"
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ladder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ladder
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ladder -d ladder"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    image: *image
+    restart: unless-stopped
+    depends_on:
+      admin:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://ladder:${POSTGRES_PASSWORD}@db:5432/ladder
+      COOKIE_KEY: ${COOKIE_KEY:?set COOKIE_KEY in .env}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      # Behind a reverse proxy on the host, requests arrive from this network's
+      # gateway (`docker network inspect tracker-rankings_default`). Trust it, or
+      # every visitor shares one IP for rate limits and anonymous voting.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      # Empty disables the provider.
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID:-}
+      REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET:-}
+      REDDIT_USER_AGENT: ${REDDIT_USER_AGENT:-}
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+
+volumes:
+  pgdata:

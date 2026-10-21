@@ -1,0 +1,63 @@
+name: Build the image
+description: >
+  Builds the Dockerfile into ghcr.io/<owner>/<repo> with branch, PR, semver and
+  short-SHA tags, and pushes it with a registry build cache when `push` is true.
+  Passes the workflow env's Tailwind pin as build args.
+
+inputs:
+  push:
+    description: Push the image and its build cache to GHCR.
+    required: true
+  token:
+    description: "Token with `packages: write`, used only when pushing."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Free up disk space
+      shell: bash
+      run: |
+        sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+
+    - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+    - name: Log in to GHCR
+      if: inputs.push == 'true'
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.token }}
+
+    - name: Compute lowercase image ref
+      id: img
+      shell: bash
+      run: echo "ref=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+      with:
+        images: ${{ steps.img.outputs.ref }}
+        tags: |
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,format=short
+
+    - name: Build and push
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      with:
+        context: .
+        push: ${{ inputs.push == 'true' }}
+        build-args: |
+          TAILWIND_VERSION=${{ env.TAILWIND_VERSION }}
+          TAILWIND_SHA256=${{ env.TAILWIND_SHA256 }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=registry,ref=${{ steps.img.outputs.ref }}:buildcache
+        cache-to: ${{ inputs.push == 'true' && format('type=registry,ref={0}:buildcache,mode=max', steps.img.outputs.ref) || '' }}

@@ -25,7 +25,7 @@ Requires the nightly toolchain (pinned), `topcoat` CLI 0.10.0, `sqlx-cli` 0.9, a
 
 ```sh
 cp .env.example .env                 # set DATABASE_URL and COOKIE_KEY
-sqlx migrate run
+cargo run -p rankings-admin -- migrate
 cargo run -p rankings-admin -- import  # idempotent; never touches votes
 topcoat asset bundle -p web
 cargo run -p web                     # http://localhost:3000
@@ -41,6 +41,18 @@ cargo run -p rankings-admin -- void-voter <voter-id> # delete one voter's votes,
 Browse via `localhost`, not `127.0.0.1`: the session cookie is always `Secure`, and browsers accept that over plain HTTP only on `localhost`.
 
 Sign-in needs a Discord and/or Reddit OAuth app. Register `${PUBLIC_BASE_URL}/auth/discord/callback` (Discord, scope `identify`) or `${PUBLIC_BASE_URL}/auth/reddit/callback` (Reddit "web app", scope `identity`), then fill the matching variables in `.env`. A provider with no credentials is hidden from `/login`.
+
+## Deploy
+
+CI publishes `ghcr.io/kilooscarsix/tracker-rankings` on every push to `main` (`latest`, `main`, `sha-<short>`) and on `v*` tags (semver tags). The image holds `web`, its asset bundle, `rankings-admin` and the seed.
+
+```sh
+cp compose.example.yaml compose.yaml   # then set POSTGRES_PASSWORD and COOKIE_KEY in .env
+docker compose up -d                   # applies migrations, then starts the site on 127.0.0.1:3000
+docker compose run --rm admin import
+```
+
+Put a TLS reverse proxy in front, set `PUBLIC_BASE_URL` to its origin and `TRUSTED_PROXIES` to the compose network's gateway. To build the image locally: `docker build -t ghcr.io/kilooscarsix/tracker-rankings:latest .`
 
 To re-vendor the seed, follow the command in `data/trackerpathways/SOURCE` and update its commit, date, checksum and counts.
 

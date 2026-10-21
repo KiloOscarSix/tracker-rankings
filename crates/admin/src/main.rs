@@ -4,6 +4,7 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use rankings_admin::error::AdminError;
+use rankings_admin::migrate::migrate;
 use rankings_admin::recompute::{refresh_pairwise, refresh_scores};
 use rankings_admin::void::void_voter;
 use rankings_admin::{import, seed};
@@ -26,6 +27,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Apply pending database migrations.
+    Migrate,
     /// Upsert the vendored trackerpathways seed. Never touches votes.
     Import {
         #[arg(long, default_value = "data/trackerpathways")]
@@ -56,6 +59,10 @@ async fn run(cli: Cli) -> Result<(), AdminError> {
     let pool = PgPool::connect(&cli.database_url).await?;
 
     match cli.command {
+        Command::Migrate => {
+            migrate(&pool).await?;
+            info!("migrations applied");
+        },
         Command::Import { data_dir } => {
             let (seed, source) = seed::load(&data_dir)?;
             let report = import::import(&pool, &seed, &source).await?;
