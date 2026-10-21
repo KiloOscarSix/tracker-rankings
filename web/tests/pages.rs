@@ -1,6 +1,6 @@
 use sqlx::PgPool;
 use topcoat::router::request::Request;
-use topcoat::router::{Body, Method, Router, StatusCode};
+use topcoat::router::{Body, Method, Router, StatusCode, header};
 
 #[expect(dead_code, reason = "each test binary uses a subset of the shared helpers")]
 mod common;
@@ -118,5 +118,40 @@ async fn vote_page_renders_the_panel_and_404s_for_stubs(
     .await?;
     let (status, _) = get(&router, &format!("/t/{stub}/vote")).await?;
     assert_eq!(status, StatusCode::NOT_FOUND);
+    Ok(())
+}
+
+#[sqlx::test(migrations = "../migrations")]
+async fn pages_revalidate_while_hashed_assets_stay_immutable(
+    pool: PgPool,
+) -> TestResult<()> {
+    let router = app(pool, true).await?;
+    for path in ["/", "/t/aither", "/t/no-such-tracker"] {
+        let request =
+            Request::builder().method(Method::GET).uri(path).body(Body::empty())?;
+        let reply = send(&router, request).await?;
+        assert_eq!(reply.headers.get_all(header::CACHE_CONTROL).iter().count(), 1);
+        assert_eq!(
+            reply.headers[header::CACHE_CONTROL],
+            "private, no-cache",
+            "{path}"
+        );
+    }
+
+    let request =
+        Request::builder().method(Method::GET).uri("/").body(Body::empty())?;
+    let html = send(&router, request).await?.body;
+    let stylesheet = html
+        .split('"')
+        .find(|part| part.contains("tailwind-"))
+        .ok_or("no stylesheet link")?;
+    let request =
+        Request::builder().method(Method::GET).uri(stylesheet).body(Body::empty())?;
+    let reply = send(&router, request).await?;
+    assert_eq!(reply.status, StatusCode::OK);
+    assert_eq!(
+        reply.headers[header::CACHE_CONTROL],
+        "public, max-age=31536000, immutable"
+    );
     Ok(())
 }

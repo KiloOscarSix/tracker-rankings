@@ -2,7 +2,7 @@ use topcoat::Result;
 use topcoat::asset::{Asset, asset};
 use topcoat::context::Cx;
 use topcoat::router::error::NotFoundError;
-use topcoat::router::{Slot, StatusCode, layout};
+use topcoat::router::{HeaderValue, Slot, StatusCode, header, layout};
 use topcoat::view::{Child, View, component, error_boundary, view};
 
 use crate::auth::sessions::current_account;
@@ -13,6 +13,9 @@ pub const STYLESHEET: Asset = asset!(concat!(env!("OUT_DIR"), "/tailwind.css"));
 pub const RANKINGS_SCRIPT: Asset = asset!("assets/rankings.js");
 
 pub const SITE_NAME: &str = "Tracker Rankings";
+
+const PAGE_CACHE_CONTROL: HeaderValue =
+    HeaderValue::from_static("private, no-cache");
 
 #[layout("/")]
 pub(crate) async fn root_layout(slot: Slot<'_>) -> Result<impl View> {
@@ -37,6 +40,7 @@ pub(crate) async fn root_layout(slot: Slot<'_>) -> Result<impl View> {
 #[component]
 async fn document(#[default] child: Child<'_>) -> Result<impl View> {
     Ok(view! {
+        ((header::CACHE_CONTROL, PAGE_CACHE_CONTROL))
         <!DOCTYPE html>
         <html lang="en" class="dark">
             <head>
