@@ -22,9 +22,6 @@ services:
   web:
     image: *image
     restart: unless-stopped
-    depends_on:
-      admin:
-        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgres://ladder:${POSTGRES_PASSWORD}@db:5432/ladder
       COOKIE_KEY: ${COOKIE_KEY:?set COOKIE_KEY in .env}
