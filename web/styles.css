@@ -10,7 +10,6 @@
 @source not "./src/components/dropdown_menu.rs";
 @source not "./src/components/field.rs";
 @source not "./src/components/hover_card.rs";
-@source not "./src/components/input.rs";
 @source not "./src/components/kbd.rs";
 @source not "./src/components/pagination.rs";
 @source not "./src/components/progress.rs";
@@ -121,5 +120,19 @@
 @layer base {
     body {
         @apply bg-background font-sans text-foreground;
+    }
+}
+
+@layer components {
+    .overflow-x-auto:has(> table) {
+        background:
+            linear-gradient(to left, var(--background) 40%, transparent) right
+                center / 3rem 100% no-repeat local,
+            linear-gradient(
+                    to left,
+                    color-mix(in oklab, var(--foreground) 22%, transparent),
+                    transparent
+                )
+                right center / 1.25rem 100% no-repeat scroll;
     }
 }

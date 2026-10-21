@@ -1,4 +1,5 @@
 use rankings_admin::recompute::refresh_scores;
+use rankings_core::axis::Axis;
 use rankings_core::config::ScoringConfig;
 use sqlx::PgPool;
 use topcoat::router::{Method, StatusCode};
@@ -146,6 +147,92 @@ async fn re_voting_overwrites(pool: PgPool) -> TestResult<()> {
     .fetch_one(&pool)
     .await?;
     let uri = format!("/vote/{stub}/membership");
+    let reply =
+        send(&router, form_request(&uri, "status=current", &headers, CLIENT)?)
+            .await?;
+    assert_eq!(reply.status, StatusCode::NOT_FOUND);
+    Ok(())
+}
+
+#[sqlx::test(migrations = "../migrations")]
+async fn quick_vote_sets_membership_and_ratings_in_one_post(
+    pool: PgPool,
+) -> TestResult<()> {
+    let router = app(pool.clone(), true).await?;
+
+    let reply = send(
+        &router,
+        form_request(
+            "/vote/aither",
+            "status=current&overall=4&content=5&category=&sort=content&q=ait",
+            &[AGENT],
+            CLIENT,
+        )?,
+    )
+    .await?;
+    assert_eq!(reply.status, StatusCode::SEE_OTHER);
+    let target = location(&reply).ok_or("no location")?.to_owned();
+    assert_eq!(target, "/?sort=content&q=ait&voted=aither#tracker-aither");
+    let anon_id = set_cookie(&reply, "anon_id").ok_or("no anon_id cookie")?;
+    let cookie = format!("anon_id={anon_id}");
+    let headers = [AGENT, ("cookie", cookie.as_str())];
+
+    let statuses = sqlx::query_scalar!(
+        r#"SELECT m.status::text AS "status!"
+           FROM memberships m
+           JOIN trackers t ON t.id = m.tracker_id
+           WHERE t.slug = 'aither'"#
+    )
+    .fetch_all(&pool)
+    .await?;
+    assert_eq!(statuses, ["current"]);
+    let rows = sqlx::query!(
+        r#"SELECT axis::text AS "axis!", score FROM ratings ORDER BY axis::text"#
+    )
+    .fetch_all(&pool)
+    .await?;
+    let stored: Vec<(String, i16)> =
+        rows.into_iter().map(|row| (row.axis, row.score)).collect();
+    assert_eq!(stored, [("content".to_owned(), 5), ("overall".to_owned(), 4)]);
+
+    let path = target.split('#').next().ok_or("empty location")?;
+    let page = send(&router, request(Method::GET, path, &headers, CLIENT)?).await?;
+    assert_eq!(page.status, StatusCode::OK);
+    let panel_at = page.body.find("id=\"vote-aither\"").ok_or("no aither panel")?;
+    let panel = page.body.get(panel_at..).ok_or("bad panel slice")?;
+    let row = tag_with(&page.body, "id=\"vote-aither\"", "<tr")?;
+    assert!(
+        !row.split_whitespace()
+            .any(|token| token == "hidden" || token.starts_with("hidden=")),
+        "{row}"
+    );
+    assert!(panel.contains("Saved."));
+    let marker = format!("aria-label=\"{} 4\"", Axis::Overall.label());
+    let radio = tag_with(panel, &marker, "<input")?;
+    assert!(
+        radio
+            .split_whitespace()
+            .any(|token| token == "checked" || token.starts_with("checked=")),
+        "{radio}"
+    );
+
+    for form in ["status=none", "status=current&overall=9"] {
+        let reply =
+            send(&router, form_request("/vote/aither", form, &headers, CLIENT)?)
+                .await?;
+        assert_eq!(reply.status, StatusCode::BAD_REQUEST, "{form}");
+    }
+    let ratings = sqlx::query_scalar!(r#"SELECT count(*) AS "n!" FROM ratings"#)
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(ratings, 2);
+
+    let stub = sqlx::query_scalar!(
+        r#"SELECT slug AS "slug!" FROM trackers WHERE NOT listed ORDER BY slug LIMIT 1"#
+    )
+    .fetch_one(&pool)
+    .await?;
+    let uri = format!("/vote/{stub}");
     let reply =
         send(&router, form_request(&uri, "status=current", &headers, CLIENT)?)
             .await?;
@@ -368,6 +455,21 @@ async fn confirmation_renders_open_without_js(pool: PgPool) -> TestResult<()> {
     assert!(dialog_open(&page.body)?);
     assert!(page.body.contains("value=\"none\""));
     Ok(())
+}
+
+/// The `opener` tag (like `<tr`) that encloses `marker`, up to the marker's `>`.
+fn tag_with<'a>(body: &'a str, marker: &str, opener: &str) -> TestResult<&'a str> {
+    let at = body.find(marker).ok_or("marker not found")?;
+    let start = body
+        .get(..at)
+        .and_then(|head| head.rfind(opener))
+        .ok_or("no opening tag before the marker")?;
+    let end = body
+        .get(at..)
+        .and_then(|tail| tail.find('>'))
+        .map(|offset| at + offset)
+        .ok_or("unterminated tag")?;
+    Ok(body.get(start..end).ok_or("bad tag slice")?)
 }
 
 fn dialog_open(body: &str) -> TestResult<bool> {

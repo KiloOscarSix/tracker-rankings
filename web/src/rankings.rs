@@ -28,6 +28,16 @@ pub const fn axis_index(axis: Axis) -> usize {
     }
 }
 
+#[must_use]
+pub fn search_haystack(tracker: &ListedTracker) -> String {
+    format!("{} {} {}", tracker.name, tracker.abbr, tracker.slug).to_lowercase()
+}
+
+#[must_use]
+pub fn matches_search(tracker: &ListedTracker, needle: &str) -> bool {
+    search_haystack(tracker).contains(&needle.trim().to_lowercase())
+}
+
 /// Tiers are assigned across every listed tracker before the category filter
 /// applies, so a tracker keeps its tier whichever filter is active.
 #[must_use]

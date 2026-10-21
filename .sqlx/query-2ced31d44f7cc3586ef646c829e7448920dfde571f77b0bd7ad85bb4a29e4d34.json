@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.status::text AS \"status!\"\n           FROM memberships m\n           JOIN trackers t ON t.id = m.tracker_id\n           WHERE t.slug = 'aither'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2ced31d44f7cc3586ef646c829e7448920dfde571f77b0bd7ad85bb4a29e4d34"
+}

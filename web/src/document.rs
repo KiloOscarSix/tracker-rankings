@@ -10,6 +10,8 @@ use crate::pages::not_found::not_found_page;
 
 pub const STYLESHEET: Asset = asset!(concat!(env!("OUT_DIR"), "/tailwind.css"));
 
+pub const RANKINGS_SCRIPT: Asset = asset!("assets/rankings.js");
+
 pub const SITE_NAME: &str = "Tracker Rankings";
 
 #[layout("/")]
@@ -47,16 +49,41 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
             <body class="min-h-screen bg-background text-foreground antialiased">
                 <header class="border-b border-border">
                     <div
-                        class="mx-auto flex max-w-6xl items-baseline justify-between px-4 py-3"
+                        class="mx-auto flex max-w-7xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-3"
                     >
-                        <a href="/" class="font-semibold tracking-tight">(SITE_NAME)</a>
-                        <nav
-                            class="flex items-baseline gap-4 text-sm text-muted-foreground"
+                        <a
+                            href="/"
+                            class="font-semibold tracking-tight whitespace-nowrap"
                         >
-                            <a href="/" class="hover:text-foreground">"Rankings"</a>
-                            <a href="/compare" class="hover:text-foreground">"Compare"</a>
-                            <a href="/about" class="hover:text-foreground">"About"</a>
-                            <a href="/me" class="hover:text-foreground">"My votes"</a>
+                            (SITE_NAME)
+                        </a>
+                        <nav
+                            class="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-muted-foreground"
+                        >
+                            <a
+                                href="/"
+                                class="whitespace-nowrap hover:text-foreground"
+                            >
+                                "Rankings"
+                            </a>
+                            <a
+                                href="/compare"
+                                class="whitespace-nowrap hover:text-foreground"
+                            >
+                                "Compare"
+                            </a>
+                            <a
+                                href="/about"
+                                class="whitespace-nowrap hover:text-foreground"
+                            >
+                                "About"
+                            </a>
+                            <a
+                                href="/me"
+                                class="whitespace-nowrap hover:text-foreground"
+                            >
+                                "My votes"
+                            </a>
                             account_nav()
                         </nav>
                     </div>
@@ -64,7 +91,7 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                 (child)
                 <footer class="mt-16 border-t border-border">
                     <p
-                        class="mx-auto max-w-6xl px-4 py-6 text-xs text-muted-foreground"
+                        class="mx-auto max-w-7xl px-4 py-6 text-xs text-muted-foreground"
                     >
                         "Tracker and route data from "
                         <a

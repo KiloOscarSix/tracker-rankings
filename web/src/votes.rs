@@ -19,6 +19,7 @@ use crate::auth::sessions::{current_account, sign_out};
 use crate::auth::voter::{current_voter, voter_for_write};
 use crate::context::{db, score_signal};
 use crate::pages::compare::compare_href;
+use crate::pages::rankings::rankings_href;
 use crate::queries::pairwise::{pair_ids, upsert_pairwise_vote};
 use crate::queries::votes::{
     delete_account,
@@ -58,6 +59,19 @@ pub struct RatingsForm {
 }
 
 #[derive(Debug, serde::Deserialize)]
+pub struct QuickVoteForm {
+    pub status: String,
+    pub overall: Option<i16>,
+    pub content: Option<i16>,
+    pub community: Option<i16>,
+    pub retention: Option<i16>,
+    pub longevity: Option<i16>,
+    pub category: Option<String>,
+    pub sort: Option<String>,
+    pub q: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
 pub struct CompareForm {
     pub a: String,
     pub b: String,
@@ -71,7 +85,23 @@ fn confirmed(confirm: Option<&str>) -> bool {
 
 #[must_use]
 pub fn routes(base: RouterBuilder) -> RouterBuilder {
-    base.route(membership).route(ratings).route(compare_vote).route(delete_my_data)
+    base.route(membership)
+        .route(ratings)
+        .route(quick_vote)
+        .route(compare_vote)
+        .route(delete_my_data)
+}
+
+fn parse_scores(picks: [(Axis, Option<i16>); 5]) -> Result<Vec<(Axis, Score)>> {
+    let mut scores: Vec<(Axis, Score)> = Vec::new();
+    for (axis, raw) in picks {
+        if let Some(raw) = raw {
+            let score =
+                Score::try_from(raw).map_err(|e| bad_request(e.to_string()))?;
+            scores.push((axis, score));
+        }
+    }
+    Ok(scores)
 }
 
 #[route(POST "/vote/{slug}/membership")]
@@ -110,21 +140,13 @@ pub async fn ratings(cx: &Cx, Form(form): Form<RatingsForm>) -> Result<SeeOther>
     let signal = score_signal(cx)?;
     let tracker = listed_tracker_id(pool, slug).await?.ok_or_not_found()?;
 
-    let picks = [
+    let scores = parse_scores([
         (Axis::Overall, form.overall),
         (Axis::Content, form.content),
         (Axis::Community, form.community),
         (Axis::Retention, form.retention),
         (Axis::Longevity, form.longevity),
-    ];
-    let mut scores: Vec<(Axis, Score)> = Vec::new();
-    for (axis, raw) in picks {
-        if let Some(raw) = raw {
-            let score =
-                Score::try_from(raw).map_err(|e| bad_request(e.to_string()))?;
-            scores.push((axis, score));
-        }
-    }
+    ])?;
     if scores.is_empty() {
         return Err(bad_request("rate at least one axis").into());
     }
@@ -136,6 +158,56 @@ pub async fn ratings(cx: &Cx, Form(form): Form<RatingsForm>) -> Result<SeeOther>
     upsert_ratings(pool, voter, tracker, &scores).await?;
     signal.notify();
     Ok(see_other(format!("/t/{slug}#vote")))
+}
+
+#[route(POST "/vote/{slug}")]
+pub async fn quick_vote(
+    cx: &Cx,
+    Form(form): Form<QuickVoteForm>,
+) -> Result<SeeOther> {
+    let slug: &str = path_param::<Slug>(cx);
+    let pool = db(cx)?;
+    let signal = score_signal(cx)?;
+    let tracker = listed_tracker_id(pool, slug).await?.ok_or_not_found()?;
+
+    let status = form
+        .status
+        .parse::<MembershipStatus>()
+        .map_err(|e| bad_request(e.to_string()))?;
+    let scores = parse_scores([
+        (Axis::Overall, form.overall),
+        (Axis::Content, form.content),
+        (Axis::Community, form.community),
+        (Axis::Retention, form.retention),
+        (Axis::Longevity, form.longevity),
+    ])?;
+    let category = form
+        .category
+        .as_deref()
+        .filter(|c| !c.is_empty())
+        .map(str::parse::<Category>)
+        .transpose()
+        .map_err(|e| bad_request(e.to_string()))?;
+    let sort = form
+        .sort
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(str::parse::<Axis>)
+        .transpose()
+        .map_err(|e| bad_request(e.to_string()))?
+        .unwrap_or(Axis::Overall);
+
+    let voter = voter_for_write(cx).await?;
+    set_membership(pool, voter, tracker, status).await?;
+    if !scores.is_empty() {
+        upsert_ratings(pool, voter, tracker, &scores).await?;
+        signal.notify();
+    }
+    let q = form.q.as_deref().unwrap_or_default();
+    Ok(see_other(format!(
+        "{}#tracker-{slug}",
+        rankings_href(category, sort, q, Some(slug))
+    )))
 }
 
 #[route(POST "/vote/compare")]

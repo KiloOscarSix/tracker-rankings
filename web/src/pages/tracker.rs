@@ -139,7 +139,7 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
     let has_facts = !facts.is_empty();
 
     Ok(view! {
-        <main class="mx-auto max-w-6xl px-4 py-8">
+        <main class="mx-auto max-w-7xl px-4 py-8">
             <h1 class="text-2xl font-semibold tracking-tight">
                 (name)
                 if let Some(abbr) = abbr {

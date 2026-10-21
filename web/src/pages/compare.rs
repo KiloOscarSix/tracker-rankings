@@ -92,7 +92,7 @@ pub(crate) async fn compare(cx: &Cx) -> Result<impl View> {
     let no_ranking = ranking_rows.is_empty();
 
     Ok(view! {
-        <main class="mx-auto max-w-6xl px-4 py-8">
+        <main class="mx-auto max-w-7xl px-4 py-8">
             <h1 class="text-2xl font-semibold tracking-tight">"Compare"</h1>
             <p class="mt-1 text-sm text-muted-foreground">
                 "Pick the better tracker of each pair. Pairs come from the trackers you are a member of, or from one category. Votes are fitted with a Bradley–Terry model."

@@ -85,7 +85,7 @@ pub(crate) async fn me(cx: &Cx) -> Result<impl View> {
         .collect();
 
     Ok(view! {
-        <main class="mx-auto max-w-6xl px-4 py-8">
+        <main class="mx-auto max-w-7xl px-4 py-8">
             <h1 class="text-2xl font-semibold tracking-tight">"My votes"</h1>
             if deleted {
                 <p

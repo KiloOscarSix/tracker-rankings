@@ -7,6 +7,7 @@ pub mod me;
 pub mod not_found;
 pub mod rankings;
 pub mod tracker;
+pub mod vote;
 
 #[must_use]
 pub fn routes(base: RouterBuilder) -> RouterBuilder {
@@ -16,5 +17,6 @@ pub fn routes(base: RouterBuilder) -> RouterBuilder {
         .page(compare::compare)
         .page(login::login)
         .page(me::me)
+        .page(vote::vote_page)
         .page(not_found::not_found)
 }
