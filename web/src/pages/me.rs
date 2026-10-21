@@ -2,11 +2,11 @@ use rankings_core::axis::Axis;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::{page, query_params};
-use topcoat::view::{View, attributes, view};
+use topcoat::view::{View, view};
 
 use crate::auth::sessions::current_account;
 use crate::auth::voter::current_voter;
-use crate::components::button::{ButtonVariant, button};
+use crate::components::confirm::confirm_dialog;
 use crate::components::table::{
     table,
     table_body,
@@ -18,16 +18,19 @@ use crate::components::table::{
 use crate::context::db;
 use crate::queries::votes::voter_memberships;
 use crate::rankings::axis_index;
+use crate::votes::CONFIRMED;
 
 #[query_params(error = bad_request)]
 pub struct MeQuery {
     pub deleted: Option<String>,
+    pub confirm: Option<String>,
 }
 
 #[page("/me")]
 pub(crate) async fn me(cx: &Cx) -> Result<impl View> {
     let query = query_params::<MeQuery>(cx)?;
     let deleted = query.deleted.is_some();
+    let confirming = query.confirm.is_some();
     let account = current_account(cx).await?;
     let voter = current_voter(cx).await?;
     let memberships = match voter {
@@ -50,6 +53,10 @@ pub(crate) async fn me(cx: &Cx) -> Result<impl View> {
         },
     );
     let can_delete = account.is_some() || voter.is_some();
+    let delete_description = "Your memberships, ratings and pairwise votes are \
+                              deleted, and a signed-in account is deleted and \
+                              signed out. This cannot be undone."
+        .to_owned();
     let no_memberships = memberships.is_empty();
     let rows: Vec<(String, String, &'static str, Vec<String>)> = memberships
         .into_iter()
@@ -140,13 +147,19 @@ pub(crate) async fn me(cx: &Cx) -> Result<impl View> {
                     <p class="text-sm">
                         "Deletes your memberships, ratings and pairwise votes. A signed-in account is deleted and signed out."
                     </p>
-                    <form method="post" action="/me/delete" class="mt-3">
-                        button(
-                            variant: ButtonVariant::Destructive,
-                            attrs: attributes! { type="submit" },
-                            "Delete my data"
+                    <div class="mt-3">
+                        confirm_dialog(
+                            id: "delete",
+                            confirming: confirming,
+                            trigger: "Delete my data",
+                            page: "/me".to_owned(),
+                            title: "Delete all your data?".to_owned(),
+                            description: delete_description,
+                            action: "/me/delete".to_owned(),
+                            fields: vec![("confirm", CONFIRMED)],
+                            submit: "Delete my data"
                         )
-                    </form>
+                    </div>
                 </section>
             }
         </main>

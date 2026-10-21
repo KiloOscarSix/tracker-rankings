@@ -161,7 +161,8 @@ One milestone per session and per small set of commits. Never commit without the
   - `/compare` shows matchups drawn from the voter's memberships or from one category.
   - The Bradley–Terry ranking is refreshed into `pairwise_scores`.
   - **Done when:** a vote is recorded and the ranking page renders from the fitted scores.
-- [ ] **Confirm destructive actions.**
+- [x] **Confirm destructive actions.**
+  - Deviation: "Not a member" left the membership radio group for its own trigger, so it can be confirmed without intercepting that form. Both actions share `components/confirm.rs`: the trigger links to `?confirm=1`, which renders the dialog open without JS, and the runtime opens it in place. A destructive POST without `confirm=yes` answers 400. Focus management is not done.
   - "Delete my data" on `/me` and "Not a member (removes my ratings)" on `/t/{slug}` act on the first click today (M6).
   - Add a confirmation step to each, using the registry `alert_dialog` (see `docs/topcoat/ui.md`), with a plain no-JS fallback. The server refuses a request that lacks the confirmation field, so a stray POST changes nothing.
   - **Done when:** tests show both POSTs without confirmation leave the data untouched, and with confirmation behave as in M6.

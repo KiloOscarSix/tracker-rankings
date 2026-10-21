@@ -4,12 +4,13 @@ use rankings_core::score::Score;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::error::RouterErrorExt;
-use topcoat::router::{page, path_param};
+use topcoat::router::{page, path_param, query_params};
 use topcoat::view::{View, attributes, view};
 
 use crate::auth::sessions::current_account;
 use crate::auth::voter::current_voter;
 use crate::components::button::button;
+use crate::components::confirm::confirm_dialog;
 use crate::components::label::label;
 use crate::components::radio_group::{radio_group, radio_group_item};
 use crate::components::score::score_cell;
@@ -30,15 +31,22 @@ use crate::queries::trackers::{
 };
 use crate::queries::votes::voter_tracker;
 use crate::rankings::axis_index;
+use crate::votes::{CONFIRMED, REMOVE};
 
 pub const RECRUITMENTS_WIKI: &str =
     "https://www.reddit.com/r/TrackersInfo/wiki/official_recruitments/";
 
 path_param!(pub slug);
 
+#[query_params(error = bad_request)]
+pub struct TrackerQuery {
+    pub confirm: Option<String>,
+}
+
 #[page("/t/{slug}")]
 pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
     let slug: &str = path_param::<Slug>(cx);
+    let confirming = query_params::<TrackerQuery>(cx)?.confirm.is_some();
     let pool = db(cx)?;
     let detail = tracker_by_slug(pool, slug).await?.ok_or_not_found()?;
     let scores = tracker_scores(pool, detail.id).await?;
@@ -87,6 +95,11 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
     let anonymous_weight = scoring(cx)?.weights.anonymous;
 
     let membership_action = format!("/vote/{slug}/membership");
+    let leave_action = membership_action.clone();
+    let tracker_href = format!("/t/{slug}");
+    let leave_title = format!("Remove your {} membership?", detail.name);
+    let leave_description =
+        format!("Your ratings for {} are deleted with it.", detail.name);
     let ratings_action = format!("/vote/{slug}/ratings");
     let my_status = mine.as_ref().map(|m| m.status);
     let is_member = my_status.is_some();
@@ -188,7 +201,10 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
                         class="flex flex-wrap items-center gap-4"
                     >
                         radio_group(
-                            attrs: attributes! { aria-label="Membership" class="sm:grid-flow-col sm:auto-cols-max sm:gap-x-4" },
+                            attrs: attributes! {
+                                aria-label="Membership"
+                                class="sm:grid-flow-col sm:auto-cols-max sm:gap-x-4"
+                            },
                             for (key, text, checked) in status_options {
                                 <div class="flex items-center gap-2">
                                     radio_group_item(
@@ -205,27 +221,24 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
                                     )
                                 </div>
                             }
-                            if is_member {
-                                <div class="flex items-center gap-2">
-                                    radio_group_item(
-                                        attrs: attributes! {
-                                            id="membership-none"
-                                            name="status"
-                                            value="none"
-                                        }
-                                    )
-                                    label(
-                                        attrs: attributes! { for="membership-none" },
-                                        "Not a member (removes my ratings)"
-                                    )
-                                </div>
-                            }
                         )
-                        button(
-                            attrs: attributes! { type="submit" },
-                            "Save membership"
-                        )
+                        button(attrs: attributes! { type="submit" }, "Save membership")
                     </form>
+                    if is_member {
+                        <div id="leave" class="mt-4">
+                            confirm_dialog(
+                                id: "leave",
+                                confirming: confirming,
+                                trigger: "Not a member (removes my ratings)",
+                                page: tracker_href,
+                                title: leave_title,
+                                description: leave_description,
+                                action: leave_action,
+                                fields: vec![("status", REMOVE), ("confirm", CONFIRMED)],
+                                submit: "Remove membership"
+                            )
+                        </div>
+                    }
                     if is_member {
                         <form method="post" action=(ratings_action) class="mt-4">
                             for (key, text, current) in rating_rows {

@@ -178,7 +178,8 @@ async fn deleting_my_data_cascades(pool: PgPool) -> TestResult<()> {
     .await?;
 
     let reply =
-        send(&router, form_request("/me/delete", "", &headers, CLIENT)?).await?;
+        send(&router, form_request("/me/delete", "confirm=yes", &headers, CLIENT)?)
+            .await?;
     assert_eq!(reply.status, StatusCode::SEE_OTHER);
     assert_eq!(location(&reply), Some("/me?deleted=1"));
     assert_eq!(set_cookie(&reply, "__Host-session"), Some(String::new()));
@@ -220,8 +221,13 @@ async fn score_writes_signal_the_refresher(pool: PgPool) -> TestResult<()> {
         ("/vote/aither/membership", "status=current", StatusCode::SEE_OTHER, 0),
         ("/vote/aither/ratings", "overall=4", StatusCode::SEE_OTHER, 1),
         ("/vote/aither/membership", "status=former", StatusCode::SEE_OTHER, 1),
-        ("/vote/aither/membership", "status=none", StatusCode::SEE_OTHER, 2),
-        ("/me/delete", "", StatusCode::SEE_OTHER, 3),
+        (
+            "/vote/aither/membership",
+            "status=none&confirm=yes",
+            StatusCode::SEE_OTHER,
+            2,
+        ),
+        ("/me/delete", "confirm=yes", StatusCode::SEE_OTHER, 3),
     ] {
         let reply =
             send(&router, form_request(path, form, &headers, CLIENT)?).await?;
@@ -229,4 +235,156 @@ async fn score_writes_signal_the_refresher(pool: PgPool) -> TestResult<()> {
         assert_eq!(*changes.borrow(), signals, "{path} {form}");
     }
     Ok(())
+}
+
+#[sqlx::test(migrations = "../migrations")]
+async fn destructive_posts_need_confirmation(pool: PgPool) -> TestResult<()> {
+    let (router, changes) = app_observed(pool.clone(), true).await?;
+    let session = sign_in(&router, "discord").await?;
+    let cookie = format!("__Host-session={session}");
+    let headers = [AGENT, ("cookie", cookie.as_str())];
+
+    for (path, form) in [
+        ("/vote/aither/membership", "status=current"),
+        ("/vote/aither/ratings", "overall=3"),
+    ] {
+        let reply =
+            send(&router, form_request(path, form, &headers, CLIENT)?).await?;
+        assert_eq!(reply.status, StatusCode::SEE_OTHER, "{path} {form}");
+    }
+    sqlx::query!(
+        "INSERT INTO pairwise_votes (voter_id, winner_id, loser_id)
+         SELECT v.id, w.id, l.id
+         FROM voters v, trackers w, trackers l
+         WHERE v.kind = 'account' AND w.slug = 'aither' AND l.slug = 'anthelion'"
+    )
+    .execute(&pool)
+    .await?;
+    let before = *changes.borrow();
+
+    for (path, form) in [
+        ("/vote/aither/membership", "status=none"),
+        ("/vote/aither/membership", "status=none&confirm=no"),
+        ("/me/delete", ""),
+        ("/me/delete", "confirm=no"),
+    ] {
+        let reply =
+            send(&router, form_request(path, form, &headers, CLIENT)?).await?;
+        assert_eq!(reply.status, StatusCode::BAD_REQUEST, "{path} {form}");
+    }
+
+    let left = sqlx::query!(
+        r#"SELECT (SELECT count(*) FROM accounts) AS "accounts!",
+                  (SELECT count(*) FROM sessions) AS "sessions!",
+                  (SELECT count(*) FROM voters) AS "voters!",
+                  (SELECT count(*) FROM memberships) AS "memberships!",
+                  (SELECT count(*) FROM ratings) AS "ratings!",
+                  (SELECT count(*) FROM pairwise_votes) AS "pairwise!""#
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert_eq!(
+        (
+            left.accounts,
+            left.sessions,
+            left.voters,
+            left.memberships,
+            left.ratings,
+            left.pairwise
+        ),
+        (1, 1, 1, 1, 1, 1)
+    );
+    assert_eq!(*changes.borrow(), before);
+
+    let reply = send(
+        &router,
+        form_request(
+            "/vote/aither/membership",
+            "status=none&confirm=yes",
+            &headers,
+            CLIENT,
+        )?,
+    )
+    .await?;
+    assert_eq!(reply.status, StatusCode::SEE_OTHER);
+    let left = sqlx::query!(
+        r#"SELECT (SELECT count(*) FROM accounts) AS "accounts!",
+                  (SELECT count(*) FROM sessions) AS "sessions!",
+                  (SELECT count(*) FROM voters) AS "voters!",
+                  (SELECT count(*) FROM memberships) AS "memberships!",
+                  (SELECT count(*) FROM ratings) AS "ratings!",
+                  (SELECT count(*) FROM pairwise_votes) AS "pairwise!""#
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert_eq!(
+        (
+            left.accounts,
+            left.sessions,
+            left.voters,
+            left.memberships,
+            left.ratings,
+            left.pairwise
+        ),
+        (1, 1, 1, 0, 0, 1)
+    );
+    Ok(())
+}
+
+#[sqlx::test(migrations = "../migrations")]
+async fn confirmation_renders_open_without_js(pool: PgPool) -> TestResult<()> {
+    let router = app(pool, true).await?;
+    let session = sign_in(&router, "discord").await?;
+    let cookie = format!("__Host-session={session}");
+    let headers = [AGENT, ("cookie", cookie.as_str())];
+
+    let reply = send(
+        &router,
+        form_request("/vote/aither/membership", "status=current", &headers, CLIENT)?,
+    )
+    .await?;
+    assert_eq!(reply.status, StatusCode::SEE_OTHER);
+
+    let page = send(&router, request(Method::GET, "/me", &headers, CLIENT)?).await?;
+    assert_eq!(page.status, StatusCode::OK);
+    assert!(page.body.contains("href=\"/me?confirm=1\""));
+    assert!(!dialog_open(&page.body)?);
+
+    let page =
+        send(&router, request(Method::GET, "/me?confirm=1", &headers, CLIENT)?)
+            .await?;
+    assert_eq!(page.status, StatusCode::OK);
+    assert!(dialog_open(&page.body)?);
+    assert!(page.body.contains("role=\"alertdialog\""));
+    assert!(page.body.contains("name=\"confirm\""));
+    assert!(page.body.contains("autofocus"));
+
+    let page = send(
+        &router,
+        request(Method::GET, "/t/aither?confirm=1", &headers, CLIENT)?,
+    )
+    .await?;
+    assert_eq!(page.status, StatusCode::OK);
+    assert!(dialog_open(&page.body)?);
+    assert!(page.body.contains("value=\"none\""));
+    Ok(())
+}
+
+fn dialog_open(body: &str) -> TestResult<bool> {
+    let start = body.find("<dialog").ok_or("no dialog tag")?;
+    let tail = body.get(start..).ok_or("bad dialog slice")?;
+    // Handler attributes hold `=>`, so the tag ends at the first unquoted `>`.
+    let mut quoted = false;
+    let end = tail
+        .find(|c: char| {
+            if c == '"' {
+                quoted = !quoted;
+            }
+            c == '>' && !quoted
+        })
+        .ok_or("unterminated dialog tag")?;
+    let tag = tail.get(..end).ok_or("bad dialog slice")?;
+    Ok(tag
+        .split_whitespace()
+        .any(|token| token == "open" || token.starts_with("open=")))
 }

@@ -33,11 +33,19 @@ use crate::queries::votes::{
 path_param!(pub slug);
 
 /// The membership form value that removes the membership.
-const REMOVE: &str = "none";
+pub const REMOVE: &str = "none";
+
+pub const CONFIRMED: &str = "yes";
 
 #[derive(Debug, serde::Deserialize)]
 pub struct MembershipForm {
     pub status: String,
+    pub confirm: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ConfirmForm {
+    pub confirm: Option<String>,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -57,6 +65,10 @@ pub struct CompareForm {
     pub category: Option<String>,
 }
 
+fn confirmed(confirm: Option<&str>) -> bool {
+    confirm == Some(CONFIRMED)
+}
+
 #[must_use]
 pub fn routes(base: RouterBuilder) -> RouterBuilder {
     base.route(membership).route(ratings).route(compare_vote).route(delete_my_data)
@@ -73,6 +85,9 @@ pub async fn membership(
     let tracker = listed_tracker_id(pool, slug).await?.ok_or_not_found()?;
 
     if form.status == REMOVE {
+        if !confirmed(form.confirm.as_deref()) {
+            return Err(bad_request("confirm removing the membership").into());
+        }
         if let Some(voter) = current_voter(cx).await? {
             remove_membership(pool, voter, tracker).await?;
             signal.notify();
@@ -165,7 +180,13 @@ pub async fn compare_vote(
 }
 
 #[route(POST "/me/delete")]
-pub async fn delete_my_data(cx: &Cx) -> Result<SeeOther> {
+pub async fn delete_my_data(
+    cx: &Cx,
+    Form(form): Form<ConfirmForm>,
+) -> Result<SeeOther> {
+    if !confirmed(form.confirm.as_deref()) {
+        return Err(bad_request("confirm deleting your data").into());
+    }
     let pool = db(cx)?;
     let signal = score_signal(cx)?;
     let account = current_account(cx).await?;

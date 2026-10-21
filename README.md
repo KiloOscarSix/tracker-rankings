@@ -46,6 +46,17 @@ To re-vendor the seed, follow the command in `data/trackerpathways/SOURCE` and u
 
 Checks: `bacon` (clippy by default), or see the full suite in `CLAUDE.md`.
 
+## AI acknowledgement
+
+AI assisted with:
+
+- Writing tests
+- Breaking down features into digestible tasks
+- General research
+- Frontend design
+
+All main line code was written by a human and reviewed.
+
 ## Attribution
 
 The tracker and route data is © the trackerpathways contributors, under the MIT License. See `data/trackerpathways/LICENSE`.

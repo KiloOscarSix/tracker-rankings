@@ -3,12 +3,10 @@
 @source "./src/**/*.rs";
 @source not "./src/components/accordion.rs";
 @source not "./src/components/alert.rs";
-@source not "./src/components/alert_dialog.rs";
 @source not "./src/components/avatar.rs";
 @source not "./src/components/breadcrumb.rs";
 @source not "./src/components/card.rs";
 @source not "./src/components/checkbox.rs";
-@source not "./src/components/dialog.rs";
 @source not "./src/components/dropdown_menu.rs";
 @source not "./src/components/field.rs";
 @source not "./src/components/hover_card.rs";
