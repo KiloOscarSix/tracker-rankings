@@ -166,7 +166,7 @@ async fn build(
     ];
 
     let bundle = AssetBundle::load_dir(bundle_dir()?)?;
-    let base = Router::builder()
+    let base = router()
         .assets(bundle)
         .app_context(pool)
         .app_context(ScoringConfig::default())
@@ -174,7 +174,7 @@ async fn build(
         .app_context(cookie_key()?)
         .app_context(Arc::new(RateLimiters::new(auth_quota, VOTE_QUOTA)))
         .app_context(signal);
-    Ok(router(extra(base)))
+    Ok(extra(base).build())
 }
 
 pub(crate) struct Reply {

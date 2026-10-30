@@ -11,6 +11,7 @@ pub mod confirm;
 pub mod dialog;
 pub mod input;
 pub mod label;
+pub mod not_found;
 pub mod radio_group;
 pub mod score;
 pub mod table;

@@ -122,6 +122,21 @@ async fn vote_page_renders_the_panel_and_404s_for_stubs(
 }
 
 #[sqlx::test(migrations = "../migrations")]
+async fn every_page_route_serves(pool: PgPool) -> TestResult<()> {
+    let router = app(pool, true).await?;
+    for path in
+        ["/", "/about", "/compare", "/login", "/me", "/t/aither", "/t/aither/vote"]
+    {
+        let (status, _) = get(&router, path).await?;
+        assert_eq!(status, StatusCode::OK, "{path}");
+    }
+
+    let (_, html) = get(&router, "/about").await?;
+    assert!(html.contains("data-topcoat-link=\"never\""));
+    Ok(())
+}
+
+#[sqlx::test(migrations = "../migrations")]
 async fn pages_revalidate_while_hashed_assets_stay_immutable(
     pool: PgPool,
 ) -> TestResult<()> {

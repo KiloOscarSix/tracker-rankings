@@ -4,14 +4,19 @@ use topcoat::view::{Attributes, Child, StaticClass, View, class, component, view
 /// Classes for a card with vertically stacked sections. Each section supplies its
 /// own horizontal padding so other content can span the full width.
 const CARD: StaticClass = class!(
-    "flex flex-col gap-5 rounded-xl border border-border bg-card py-6 \
-     text-card-foreground shadow-sm",
+    "flex flex-col gap-5 rounded-xl border border-border bg-card py-6",
+    "text-card-foreground shadow-sm",
+    "has-[>[data-slot=table]:first-child]:overflow-hidden",
+    "has-[>[data-slot=table]:first-child]:pt-0",
+    "has-[>[data-slot=table]:last-child]:overflow-hidden",
+    "has-[>[data-slot=table]:last-child]:pb-0",
 );
 
 /// A bordered panel that groups related content.
 ///
-/// Pass sections as children. Use a header, body, or footer as needed. `attrs` are
-/// forwarded to the `<div>`, with extra classes added to its classes.
+/// Pass a header, body, footer, or table as children. A table at either end of the
+/// card sits against that edge, without padding. `attrs` adds attributes and classes
+/// to the card's `<div>`.
 ///
 /// ```ignore
 /// view! {
@@ -93,11 +98,7 @@ pub async fn card_content(
     #[default] mut attrs: Attributes,
     #[default] child: Child<'_>,
 ) -> Result<impl View> {
-    Ok(
-        view! {
-            <div class=(class!("px-6", attrs.remove("class"))) (attrs)>(child)</div>
-        },
-    )
+    Ok(view! { <div class=(class!("px-6", attrs.remove("class"))) (attrs)>(child)</div> })
 }
 
 /// The closing section of a [`card`], a horizontal row for actions.

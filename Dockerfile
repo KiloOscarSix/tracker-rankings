@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake clang libclang-dev perl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cargo install topcoat-cli@0.10.0 --locked
+RUN cargo install topcoat-cli@0.11.0 --locked
 
 COPY --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
 ENV SQLX_OFFLINE=true \

@@ -6,20 +6,19 @@ use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::error::{RouterErrorExt, bad_request};
 use topcoat::router::{page, path_param, query_params};
+use topcoat::runtime::{link_attrs, prefetch_mode};
 use topcoat::view::{View, attributes, component, view};
 
+use crate::app::rankings::rankings_href;
 use crate::auth::sessions::current_account;
 use crate::auth::voter::current_voter;
 use crate::components::button::button;
 use crate::components::choice::choice;
 use crate::components::score::score_cell;
 use crate::context::{db, scoring};
-use crate::pages::rankings::rankings_href;
 use crate::queries::trackers::{tracker_by_slug, tracker_scores};
 use crate::queries::votes::voter_tracker;
 use crate::rankings::axis_index;
-
-path_param!(pub slug);
 
 pub(crate) struct VotePanel {
     pub slug: String,
@@ -102,7 +101,7 @@ pub(crate) fn vote_note(signed_in: bool, anonymous_weight: f64) -> Option<String
 }
 
 #[component]
-pub(crate) async fn vote_panel(panel: VotePanel) -> Result<impl View> {
+pub(crate) async fn vote_panel(cx: &Cx, panel: VotePanel) -> Result<impl View> {
     let VotePanel {
         slug,
         categories,
@@ -133,12 +132,7 @@ pub(crate) async fn vote_panel(panel: VotePanel) -> Result<impl View> {
                     <div class="flex flex-wrap gap-2">
                         for (key, label, checked) in status_options {
                             choice(
-                                attrs: attributes! {
-                                    name="status"
-                                    value=(key)
-                                    checked=(checked)
-                                    required=""
-                                },
+                                attrs: attributes! { name="status" value=(key) checked=(checked) required="" },
                                 (label)
                             )
                         }
@@ -154,7 +148,10 @@ pub(crate) async fn vote_panel(panel: VotePanel) -> Result<impl View> {
                     <div class="grid w-fit gap-x-12 gap-y-2 md:grid-cols-2">
                         for (key, label, current) in rating_rows {
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <span id=(format!("rate-{slug}-{key}")) class="w-40 text-sm">
+                                <span
+                                    id=(format!("rate-{slug}-{key}"))
+                                    class="w-40 text-sm"
+                                >
                                     (label)
                                 </span>
                                 <div
@@ -186,8 +183,8 @@ pub(crate) async fn vote_panel(panel: VotePanel) -> Result<impl View> {
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                     button(attrs: attributes! { type="submit" }, "Save vote")
                     <a
-                        href=(format!("/t/{slug}"))
                         class="text-sm underline-offset-4 hover:underline"
+                        (link_attrs(cx, format!("/t/{slug}"), prefetch_mode(cx)))
                     >
                         "Full details"
                     </a>
@@ -212,9 +209,9 @@ pub(crate) struct VotePageParams {
     q: Option<String>,
 }
 
-#[page("/t/{slug}/vote")]
+#[page]
 pub(crate) async fn vote_page(cx: &Cx) -> Result<impl View> {
-    let slug: &str = path_param::<Slug>(cx);
+    let slug: &str = path_param::<super::Slug>(cx);
     let params = query_params::<VotePageParams>(cx)?;
     let category = params
         .category
@@ -264,7 +261,10 @@ pub(crate) async fn vote_page(cx: &Cx) -> Result<impl View> {
         <main class="mx-auto max-w-7xl px-4 py-8">
             <h1 class="text-2xl font-semibold tracking-tight">(heading)</h1>
             <p class="mt-1 mb-6 text-sm">
-                <a href=(back_href) class="underline-offset-4 hover:underline">
+                <a
+                    class="underline-offset-4 hover:underline"
+                    (link_attrs(cx, back_href, prefetch_mode(cx)))
+                >
                     "Back to rankings"
                 </a>
             </p>

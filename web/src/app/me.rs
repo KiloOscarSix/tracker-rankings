@@ -1,10 +1,14 @@
 use rankings_core::axis::Axis;
 use topcoat::Result;
 use topcoat::context::Cx;
-use topcoat::router::{page, query_params};
+use topcoat::router::content::Form;
+use topcoat::router::error::{SeeOther, bad_request, see_other};
+use topcoat::router::{page, query_params, route};
+use topcoat::runtime::{link_attrs, prefetch_mode};
 use topcoat::view::{View, view};
 
-use crate::auth::sessions::current_account;
+use crate::auth::anon::{clear_anon_cookie, existing_anon_voter};
+use crate::auth::sessions::{current_account, sign_out};
 use crate::auth::voter::current_voter;
 use crate::components::confirm::confirm_dialog;
 use crate::components::table::{
@@ -15,10 +19,14 @@ use crate::components::table::{
     table_header,
     table_row,
 };
-use crate::context::db;
-use crate::queries::votes::voter_memberships;
+use crate::context::{db, score_signal};
+use crate::queries::votes::{
+    delete_account,
+    delete_anon_identity,
+    voter_memberships,
+};
 use crate::rankings::axis_index;
-use crate::votes::CONFIRMED;
+use crate::votes::{CONFIRMED, ConfirmForm, confirmed};
 
 #[query_params(error = bad_request)]
 pub struct MeQuery {
@@ -26,7 +34,7 @@ pub struct MeQuery {
     pub confirm: Option<String>,
 }
 
-#[page("/me")]
+#[page]
 pub(crate) async fn me(cx: &Cx) -> Result<impl View> {
     let query = query_params::<MeQuery>(cx)?;
     let deleted = query.deleted.is_some();
@@ -122,7 +130,10 @@ pub(crate) async fn me(cx: &Cx) -> Result<impl View> {
                             for (href, name, status, scores) in rows {
                                 table_row(
                                     table_cell(
-                                        <a href=(href) class="font-medium hover:underline">
+                                        <a
+                                            class="font-medium hover:underline"
+                                            (link_attrs(cx, href, prefetch_mode(cx)))
+                                        >
                                             (name)
                                         </a>
                                     )
@@ -164,4 +175,30 @@ pub(crate) async fn me(cx: &Cx) -> Result<impl View> {
             }
         </main>
     })
+}
+
+#[route(POST "./delete")]
+pub(crate) async fn delete_my_data(
+    cx: &Cx,
+    Form(form): Form<ConfirmForm>,
+) -> Result<SeeOther> {
+    if !confirmed(form.confirm.as_deref()) {
+        return Err(bad_request("confirm deleting your data").into());
+    }
+    let pool = db(cx)?;
+    let signal = score_signal(cx)?;
+    let account = current_account(cx).await?;
+    if let Some(account) = &account {
+        sign_out(cx, pool).await?;
+        delete_account(pool, account.id).await?;
+    }
+    let anon = existing_anon_voter(cx).await?;
+    if let Some(voter) = anon {
+        delete_anon_identity(pool, voter).await?;
+    }
+    if account.is_some() || anon.is_some() {
+        signal.notify();
+    }
+    clear_anon_cookie(cx);
+    Ok(see_other("/me?deleted=1"))
 }

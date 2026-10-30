@@ -9,13 +9,17 @@ use topcoat::context::Cx;
 use topcoat::icon::icon;
 use topcoat::icon::iconify::iconify_icon;
 use topcoat::router::error::bad_request;
-use topcoat::router::{page, query_params};
+use topcoat::router::{page, query_params, segment};
+use topcoat::runtime::{link_attrs, prefetch_mode};
 use topcoat::view::{View, attributes, view};
 
+use crate::app::t::slug::vote::{PanelContext, VotePanel, vote_note, vote_panel};
 use crate::auth::sessions::current_account;
 use crate::auth::voter::current_voter;
 use crate::components::badge::{BadgeVariant, badge_variants};
+use crate::components::button::{ButtonSize, ButtonVariant, button_variants};
 use crate::components::input::input;
+use crate::components::label::label;
 use crate::components::score::{score_cell, tier_badge};
 use crate::components::table::{
     table,
@@ -27,10 +31,11 @@ use crate::components::table::{
 };
 use crate::context::{db, scoring};
 use crate::document::RANKINGS_SCRIPT;
-use crate::pages::vote::{PanelContext, VotePanel, vote_note, vote_panel};
 use crate::queries::trackers::{all_scores, listed_trackers};
 use crate::queries::votes::{MyMembership, voter_memberships};
 use crate::rankings::{build, matches_search, search_haystack};
+
+segment!(kind = Group);
 
 #[query_params(error = bad_request)]
 pub(crate) struct RankingParams {
@@ -95,7 +100,7 @@ fn encode_component(value: &str) -> String {
     out
 }
 
-#[page("/")]
+#[page]
 pub(crate) async fn rankings(cx: &Cx) -> Result<impl View> {
     let params = query_params::<RankingParams>(cx)?;
     let filter = params
@@ -213,19 +218,19 @@ pub(crate) async fn rankings(cx: &Cx) -> Result<impl View> {
             <h1 class="text-2xl font-semibold tracking-tight">"Rankings"</h1>
             <p class="mt-1 text-sm text-muted-foreground">(intro)</p>
             <nav aria-label="Category" class="mt-6 flex flex-wrap gap-2">
-                for (href, label, active) in category_links {
+                for (href, text, active) in category_links {
                     let variant = if active {
                         BadgeVariant::Primary
                     } else {
                         BadgeVariant::Outline
                     };
                     <a
-                        href=(href)
                         class=(badge_variants(variant))
                         aria-current=(active.then_some("page"))
                         data-keep-search=""
+                        (link_attrs(cx, href, prefetch_mode(cx)))
                     >
-                        (label)
+                        (text)
                     </a>
                 }
             </nav>
@@ -234,7 +239,10 @@ pub(crate) async fn rankings(cx: &Cx) -> Result<impl View> {
                     <input type="hidden" name="category" value=(c.key())>
                 }
                 <input type="hidden" name="sort" value=(sort.key())>
-                <label for="tracker-search" class="sr-only">"Search trackers"</label>
+                label(
+                    attrs: attributes! { for="tracker-search" class="sr-only" },
+                    "Search trackers"
+                )
                 input(
                     attrs: attributes! {
                         id="tracker-search"
@@ -276,19 +284,20 @@ pub(crate) async fn rankings(cx: &Cx) -> Result<impl View> {
                                     "Categories"
                                 )
                                 table_head("Tier")
-                                for (href, label, aria_sort, idx) in sort_links {
+                                for (href, text, aria_sort, idx) in sort_links {
                                     let head_class = if idx == 0 {
                                         "whitespace-normal!"
                                     } else {
                                         "hidden whitespace-normal! lg:table-cell"
                                     };
                                     table_head(
-                                        attrs: attributes! {
-                                            aria-sort=(aria_sort)
-                                            class=(head_class)
-                                        },
-                                        <a href=(href) class="hover:underline" data-keep-search="">
-                                            (label)
+                                        attrs: attributes! { aria-sort=(aria_sort) class=(head_class) },
+                                        <a
+                                            class="hover:underline"
+                                            data-keep-search=""
+                                            (link_attrs(cx, href, prefetch_mode(cx)))
+                                        >
+                                            (text)
                                         </a>
                                     )
                                 }
@@ -329,10 +338,15 @@ pub(crate) async fn rankings(cx: &Cx) -> Result<impl View> {
                                         attrs: attributes! {
                                             class="sticky left-0 z-10 bg-background whitespace-normal! group-hover:bg-[color-mix(in_oklab,var(--foreground)_5%,var(--background))] group-data-open:bg-[color-mix(in_oklab,var(--foreground)_5%,var(--background))]"
                                         },
-                                        <a href=(href) class="font-medium hover:underline">
+                                        <a
+                                            class="font-medium hover:underline"
+                                            (link_attrs(cx, href, prefetch_mode(cx)))
+                                        >
                                             (name)
                                         </a>
-                                        <span class="block font-mono text-xs text-muted-foreground sm:ml-2 sm:inline">
+                                        <span
+                                            class="block font-mono text-xs text-muted-foreground sm:ml-2 sm:inline"
+                                        >
                                             (abbr)
                                         </span>
                                     )
@@ -361,7 +375,10 @@ pub(crate) async fn rankings(cx: &Cx) -> Result<impl View> {
                                             aria-controls=(format!("vote-{slug}"))
                                             aria-expanded=(if open { "true" } else { "false" })
                                             aria-label=(vote_label)
-                                            class="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            class=(button_variants(
+                                                ButtonVariant::Ghost,
+                                                ButtonSize::Icon,
+                                            ))
                                         >
                                             icon(
                                                 data: iconify_icon!("lucide:chevron-down"),

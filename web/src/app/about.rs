@@ -3,12 +3,13 @@ use rankings_core::tier::Tier;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::page;
+use topcoat::runtime::{link_attrs, prefetch_mode};
 use topcoat::view::{View, view};
 
+use crate::app::t::slug::RECRUITMENTS_WIKI;
 use crate::context::scoring;
-use crate::pages::tracker::RECRUITMENTS_WIKI;
 
-#[page("/about")]
+#[page]
 pub(crate) async fn about(cx: &Cx) -> Result<impl View> {
     let cfg = scoring(cx)?;
 
@@ -133,7 +134,9 @@ pub(crate) async fn about(cx: &Cx) -> Result<impl View> {
                 </p>
                 <p class="mt-3 text-sm">
                     "You can review or delete everything you have voted on from "
-                    <a href="/me" class="underline">"My votes"</a>
+                    <a class="underline" (link_attrs(cx, "/me", prefetch_mode(cx)))>
+                        "My votes"
+                    </a>
                     "."
                 </p>
             </section>

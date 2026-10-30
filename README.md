@@ -21,7 +21,7 @@ See [`docs/PLAN.md`](docs/PLAN.md) for scope and milestones.
 
 ## Run locally
 
-Requires the nightly toolchain (pinned), `topcoat` CLI 0.10.0, `sqlx-cli` 0.9, and Docker for Postgres.
+Requires the nightly toolchain (pinned), `topcoat` CLI 0.11.0, `sqlx-cli` 0.9, and Docker for Postgres.
 
 ```sh
 cp .env.example .env                 # set DATABASE_URL and COOKIE_KEY

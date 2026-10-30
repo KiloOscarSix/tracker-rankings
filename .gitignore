@@ -39,3 +39,6 @@ dist/
 .zed/
 *.sw?
 .DS_Store
+
+# Shared Topcoat reference 
+docs/topcoat

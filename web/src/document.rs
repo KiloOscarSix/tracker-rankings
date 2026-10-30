@@ -1,12 +1,11 @@
 use topcoat::Result;
 use topcoat::asset::{Asset, asset};
 use topcoat::context::Cx;
-use topcoat::router::error::NotFoundError;
-use topcoat::router::{HeaderValue, Slot, StatusCode, header, layout};
-use topcoat::view::{Child, View, component, error_boundary, view};
+use topcoat::router::{HeaderValue, header};
+use topcoat::runtime::{link_attrs, prefetch_mode};
+use topcoat::view::{Child, View, component, view};
 
 use crate::auth::sessions::current_account;
-use crate::pages::not_found::not_found_page;
 
 pub const STYLESHEET: Asset = asset!(concat!(env!("OUT_DIR"), "/tailwind.css"));
 
@@ -17,28 +16,11 @@ pub const SITE_NAME: &str = "Tracker Rankings";
 const PAGE_CACHE_CONTROL: HeaderValue =
     HeaderValue::from_static("private, no-cache");
 
-#[layout("/")]
-pub(crate) async fn root_layout(slot: Slot<'_>) -> Result<impl View> {
-    Ok(view! {
-        error_boundary(
-            fallback: |error| {
-                if error.downcast_ref::<NotFoundError>().is_none() {
-                    return Err(error);
-                }
-                Ok(
-                    view! {
-                        (StatusCode::NOT_FOUND)
-                        document(not_found_page())
-                    },
-                )
-            },
-            document((slot))
-        )
-    })
-}
-
 #[component]
-async fn document(#[default] child: Child<'_>) -> Result<impl View> {
+pub(crate) async fn document(
+    cx: &Cx,
+    #[default] child: Child<'_>,
+) -> Result<impl View> {
     Ok(view! {
         ((header::CACHE_CONTROL, PAGE_CACHE_CONTROL))
         <!DOCTYPE html>
@@ -56,8 +38,8 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                         class="mx-auto flex max-w-7xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 py-3"
                     >
                         <a
-                            href="/"
                             class="font-semibold tracking-tight whitespace-nowrap"
+                            (link_attrs(cx, "/", prefetch_mode(cx)))
                         >
                             (SITE_NAME)
                         </a>
@@ -65,26 +47,26 @@ async fn document(#[default] child: Child<'_>) -> Result<impl View> {
                             class="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-muted-foreground"
                         >
                             <a
-                                href="/"
                                 class="whitespace-nowrap hover:text-foreground"
+                                (link_attrs(cx, "/", prefetch_mode(cx)))
                             >
                                 "Rankings"
                             </a>
                             <a
-                                href="/compare"
                                 class="whitespace-nowrap hover:text-foreground"
+                                (link_attrs(cx, "/compare", prefetch_mode(cx)))
                             >
                                 "Compare"
                             </a>
                             <a
-                                href="/about"
                                 class="whitespace-nowrap hover:text-foreground"
+                                (link_attrs(cx, "/about", prefetch_mode(cx)))
                             >
                                 "About"
                             </a>
                             <a
-                                href="/me"
                                 class="whitespace-nowrap hover:text-foreground"
+                                (link_attrs(cx, "/me", prefetch_mode(cx)))
                             >
                                 "My votes"
                             </a>
@@ -123,7 +105,12 @@ async fn account_nav(cx: &Cx) -> Result<impl View> {
                 <button type="submit" class="hover:text-foreground">"Sign out"</button>
             </form>
         } else {
-            <a href="/login" class="hover:text-foreground">"Sign in"</a>
+            <a
+                class="hover:text-foreground"
+                (link_attrs(cx, "/login", prefetch_mode(cx)))
+            >
+                "Sign in"
+            </a>
         }
     })
 }

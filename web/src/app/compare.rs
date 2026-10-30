@@ -3,6 +3,7 @@ use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::error::bad_request;
 use topcoat::router::{page, query_params};
+use topcoat::runtime::{link_attrs, prefetch_mode};
 use topcoat::view::{View, attributes, view};
 
 use crate::auth::voter::current_voter;
@@ -37,7 +38,7 @@ pub fn compare_href(category: Option<Category>) -> String {
     )
 }
 
-#[page("/compare")]
+#[page]
 pub(crate) async fn compare(cx: &Cx) -> Result<impl View> {
     let params = query_params::<CompareParams>(cx)?;
     let category = params
@@ -105,9 +106,9 @@ pub(crate) async fn compare(cx: &Cx) -> Result<impl View> {
                         BadgeVariant::Outline
                     };
                     <a
-                        href=(href)
                         class=(badge_variants(variant))
                         aria-current=(active.then_some("page"))
+                        (link_attrs(cx, href, prefetch_mode(cx)))
                     >
                         (label)
                     </a>
@@ -140,7 +141,10 @@ pub(crate) async fn compare(cx: &Cx) -> Result<impl View> {
                             attrs: attributes! { type="submit" name="winner" value=(b.slug) },
                             (b.name)
                         )
-                        <a href=(skip_href) class="text-sm text-muted-foreground hover:underline">
+                        <a
+                            class="text-sm text-muted-foreground hover:underline"
+                            (link_attrs(cx, skip_href, prefetch_mode(cx)))
+                        >
                             "Skip"
                         </a>
                     </form>
@@ -156,7 +160,9 @@ pub(crate) async fn compare(cx: &Cx) -> Result<impl View> {
                     "Pairwise ranking"
                 </h2>
                 if no_ranking {
-                    <p class="text-sm text-muted-foreground">"No pairwise votes yet."</p>
+                    <p class="text-sm text-muted-foreground">
+                        "No pairwise votes yet."
+                    </p>
                 } else {
                     table(
                         table_header(
@@ -172,7 +178,10 @@ pub(crate) async fn compare(cx: &Cx) -> Result<impl View> {
                                 table_row(
                                     table_cell((rank))
                                     table_cell(
-                                        <a href=(href) class="font-medium hover:underline">
+                                        <a
+                                            class="font-medium hover:underline"
+                                            (link_attrs(cx, href, prefetch_mode(cx)))
+                                        >
                                             (name)
                                         </a>
                                     )

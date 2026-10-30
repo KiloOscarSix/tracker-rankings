@@ -1,10 +1,7 @@
 // Progressive enhancement for the rankings table: live search and the
 // expandable vote panel under each row. Without it, the search form submits
-// and the row toggle links to the tracker's vote section.
-
-const table = document.querySelector("[data-rankings]");
-const search = document.querySelector("[data-search]");
-const empty = document.querySelector("[data-search-empty]");
+// and the row toggle links to the tracker's vote section. Listeners are
+// delegated on document so they survive client navigation.
 
 function setOpen(row, open) {
 	const panel = document.getElementById(row.dataset.panel);
@@ -40,8 +37,8 @@ async function loadPanel(row) {
 	}
 }
 
-table?.addEventListener("click", (event) => {
-	const row = event.target.closest("tr[data-panel]");
+function onClick(event) {
+	const row = event.target.closest("[data-rankings] tr[data-panel]");
 	if (!row) return;
 	const toggle = event.target.closest("[data-toggle]");
 	if (!toggle) {
@@ -50,9 +47,12 @@ table?.addEventListener("click", (event) => {
 	}
 	event.preventDefault();
 	setOpen(row, !row.hasAttribute("data-open"));
-});
+}
 
-function applySearch() {
+document.addEventListener("click", onClick, true);
+
+function applySearch(search) {
+	const empty = document.querySelector("[data-search-empty]");
 	const raw = search.value.trim();
 	const needle = raw.toLowerCase();
 	let shown = 0;
@@ -79,9 +79,12 @@ function applySearch() {
 	window.history.replaceState(null, "", url.pathname + url.search + url.hash);
 }
 
-search?.addEventListener("input", applySearch);
+document.addEventListener("input", (event) => {
+	if (event.target instanceof Element && event.target.matches("[data-search]")) applySearch(event.target);
+});
 
 document.addEventListener("keydown", (event) => {
+	const search = document.querySelector("[data-search]");
 	if (!search || event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
 	const target = event.target;
 	if (target instanceof HTMLElement && (target.isContentEditable || target.closest("input, textarea, select"))) return;

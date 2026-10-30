@@ -12,7 +12,7 @@ pub struct LoginQuery {
     pub error: Option<String>,
 }
 
-#[page("/login")]
+#[page]
 pub(crate) async fn login(cx: &Cx) -> Result<impl View> {
     let query = query_params::<LoginQuery>(cx)?;
     let failed = query.error.is_some();
@@ -32,7 +32,10 @@ pub(crate) async fn login(cx: &Cx) -> Result<impl View> {
         <main class="mx-auto max-w-md px-4 py-12">
             <h1 class="text-2xl font-semibold tracking-tight">"Sign in"</h1>
             if let Some(name) = signed_in {
-                <p class="mt-4 text-sm">"Signed in as " (name)</p>
+                <p class="mt-4 text-sm">
+                    "Signed in as "
+                    (name)
+                </p>
             } else {
                 if failed {
                     <p

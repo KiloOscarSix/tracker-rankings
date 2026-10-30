@@ -1,7 +1,7 @@
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::runtime::{Event, expr, signal};
-use topcoat::view::{View, attributes, component, view};
+use topcoat::view::{View, attributes, component, element_id, view};
 
 use super::alert_dialog::alert_dialog;
 use super::button::{ButtonSize, ButtonVariant, button, button_variants};
@@ -32,10 +32,10 @@ pub async fn confirm_dialog(
     // (HTML spec, "flush autofocus candidates").
     let open_href = format!("{page}?confirm=1");
     let cancel_href = format!("{page}#{id}");
-    let title_id = format!("{id}-title");
-    let description_id = format!("{id}-description");
-    let trigger_id = format!("{id}-trigger");
-    let cancel_id = format!("{id}-cancel");
+    let title_id = element_id(cx);
+    let description_id = element_id(cx);
+    let trigger_id = element_id(cx);
+    let cancel_id = element_id(cx);
 
     Ok(view! {
         <a
@@ -46,7 +46,9 @@ pub async fn confirm_dialog(
                 e.prevent_default();
                 open.set(true);
                 // Signal writes reach the DOM in a microtask; focus once the dialog shows.
-                raw!("requestAnimationFrame(() => document.getElementById(${cancel_id}).focus())");
+                raw!(
+                    "requestAnimationFrame(() => document.getElementById(${cancel_id}).focus())",
+                );
             })
         >
             (trigger)
@@ -64,9 +66,13 @@ pub async fn confirm_dialog(
                     } else if e.key == "Tab" {
                         e.prevent_default();
                         if e.shift_key {
-                            raw!("(() => { const f = [...document.activeElement.closest('dialog').querySelectorAll('a[href], button:not([disabled])')]; const i = f.indexOf(document.activeElement); f[(i < 1 ? f.length : i) - 1].focus(); })()");
+                            raw!(
+                                "(() => { const f = [...document.activeElement.closest('dialog').querySelectorAll('a[href], button:not([disabled])')]; const i = f.indexOf(document.activeElement); f[(i < 1 ? f.length : i) - 1].focus(); })()",
+                            );
                         } else {
-                            raw!("(() => { const f = [...document.activeElement.closest('dialog').querySelectorAll('a[href], button:not([disabled])')]; f[(f.indexOf(document.activeElement) + 1) % f.length].focus(); })()");
+                            raw!(
+                                "(() => { const f = [...document.activeElement.closest('dialog').querySelectorAll('a[href], button:not([disabled])')]; f[(f.indexOf(document.activeElement) + 1) % f.length].focus(); })()",
+                            );
                         }
                     }
                 })

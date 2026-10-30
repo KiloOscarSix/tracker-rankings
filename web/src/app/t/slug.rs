@@ -1,10 +1,13 @@
+pub mod vote;
+
 use rankings_core::axis::Axis;
 use rankings_core::membership::MembershipStatus;
 use rankings_core::score::Score;
 use topcoat::Result;
 use topcoat::context::Cx;
 use topcoat::router::error::RouterErrorExt;
-use topcoat::router::{page, path_param, query_params};
+use topcoat::router::{module_param, page, path_param, query_params};
+use topcoat::runtime::{link_attrs, prefetch_mode};
 use topcoat::view::{View, attributes, view};
 
 use crate::auth::sessions::current_account;
@@ -36,14 +39,14 @@ use crate::votes::{CONFIRMED, REMOVE};
 pub const RECRUITMENTS_WIKI: &str =
     "https://www.reddit.com/r/TrackersInfo/wiki/official_recruitments/";
 
-path_param!(pub slug);
+module_param!(pub slug);
 
 #[query_params(error = bad_request)]
 pub struct TrackerQuery {
     pub confirm: Option<String>,
 }
 
-#[page("/t/{slug}")]
+#[page]
 pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
     let slug: &str = path_param::<Slug>(cx);
     let confirming = query_params::<TrackerQuery>(cx)?.confirm.is_some();
@@ -335,7 +338,10 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
                                 let wait = wait_label(route.days);
                                 table_row(
                                     table_cell(
-                                        <a href=(href) class="font-medium hover:underline">
+                                        <a
+                                            class="font-medium hover:underline"
+                                            (link_attrs(cx, href, prefetch_mode(cx)))
+                                        >
                                             (route.name)
                                         </a>
                                     )
@@ -382,7 +388,10 @@ pub(crate) async fn tracker(cx: &Cx) -> Result<impl View> {
                                 let wait = wait_label(route.days);
                                 table_row(
                                     table_cell(
-                                        <a href=(href) class="font-medium hover:underline">
+                                        <a
+                                            class="font-medium hover:underline"
+                                            (link_attrs(cx, href, prefetch_mode(cx)))
+                                        >
                                             (route.name)
                                         </a>
                                     )

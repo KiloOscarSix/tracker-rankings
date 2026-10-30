@@ -6,7 +6,7 @@ use rankings_core::config::ScoringConfig;
 use sqlx::PgPool;
 use tokio::net::TcpListener;
 use topcoat::asset::{AssetBundle, RouterBuilderAssetExt};
-use topcoat::router::{OriginPolicy, Router, TrustedProxies};
+use topcoat::router::{OriginPolicy, TrustedProxies};
 use tracing::{error, info, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
@@ -75,7 +75,7 @@ async fn run() -> Result<(), StartupError> {
     );
     spawn_rate_limit_cleanup(Arc::clone(&limiters));
 
-    let mut base = Router::builder()
+    let mut base = router()
         .app_context(pool)
         .app_context(scoring)
         .app_context(OAuthClients::new(clients))
@@ -92,7 +92,7 @@ async fn run() -> Result<(), StartupError> {
     }
 
     info!("Listening on {addr}");
-    topcoat::serve(listener, router(base)).await.map_err(StartupError::Serve)
+    topcoat::serve(listener, base.build()).await.map_err(StartupError::Serve)
 }
 
 fn logging() {
